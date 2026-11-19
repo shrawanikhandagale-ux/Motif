@@ -1,27 +1,34 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { ProjectRecord, Brief, AssetRecord } from '../../../types';
 import { useProgress } from '../../../hooks';
 import { learnService } from '../../learn/services';
-import { createService } from '../services';
 
 export function useProject(projectId: string) {
   const {
     projects,
+    assets: allAssets,
     updateProjectStatus,
     deleteProject,
     toggleChecklistItem: toggleItemInStore,
     isChecklistCompleted: isItemCompletedInStore,
+    createAsset: createAssetInStore,
+    deleteAsset: deleteAssetInStore,
+    deployAssetToMarket: deployAssetInStore,
+    isAssetDeployed: isAssetDeployedInStore,
   } = useProgress();
 
   const [brief, setBrief] = useState<Brief | null>(null);
-  const [assets, setAssets] = useState<AssetRecord[]>([]);
   const [loadingBrief, setLoadingBrief] = useState(true);
 
   const project = projects.find((p: ProjectRecord) => p.id === projectId) || null;
+  const assets = useMemo(
+    () => allAssets.filter((a) => !a.projectId || a.projectId === projectId),
+    [allAssets, projectId]
+  );
 
   useEffect(() => {
     let cancelled = false;
-    async function loadData() {
+    async function loadBrief() {
       if (!project?.briefId) {
         setBrief(null);
         setLoadingBrief(false);
@@ -33,17 +40,12 @@ export function useProject(projectId: string) {
           setLoadingBrief(false);
         }
       }
-
-      const a = await createService.getAssets(projectId);
-      if (!cancelled) {
-        setAssets(a);
-      }
     }
-    loadData();
+    loadBrief();
     return () => {
       cancelled = true;
     };
-  }, [project?.briefId, projectId]);
+  }, [project?.briefId]);
 
   const toggleChecklistItem = useCallback(
     (itemId: string) => {
@@ -61,19 +63,22 @@ export function useProject(projectId: string) {
   );
 
   const isChecklistCompleted = useCallback(
-    (itemId: string) => {
-      return isItemCompletedInStore(itemId);
-    },
+    (itemId: string) => isItemCompletedInStore(itemId),
     [isItemCompletedInStore]
   );
 
   const updateStatus = useCallback(
     (status: ProjectRecord['status']) => {
-      if (project) {
-        updateProjectStatus(project.id, status);
-      }
+      if (project) updateProjectStatus(project.id, status);
     },
     [project, updateProjectStatus]
+  );
+
+  const createAsset = useCallback(
+    (props: Partial<AssetRecord> & { title: string }) => {
+      return createAssetInStore({ ...props, projectId });
+    },
+    [createAssetInStore, projectId]
   );
 
   return {
@@ -85,8 +90,11 @@ export function useProject(projectId: string) {
     isChecklistCompleted,
     updateStatus,
     deleteProject: () => (project ? deleteProject(project.id) : false),
+    createAsset,
+    deleteAsset: deleteAssetInStore,
+    deployAssetToMarket: deployAssetInStore,
+    isAssetDeployed: isAssetDeployedInStore,
   };
 }
 
 export default useProject;
-

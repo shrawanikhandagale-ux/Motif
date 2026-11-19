@@ -1,17 +1,32 @@
-import { Enrolment, ProgressItem, Project } from '../../types';
+import {
+  Enrolment,
+  ProgressItem,
+  Project,
+  AssetRecord,
+  AssetHandoffRecord,
+  DeployedAssetView,
+  DepartmentId,
+  HandoffStatus,
+} from '../../types';
+import { MOCK_ASSETS } from '../../modules/create/services/mock/projects';
 
 export interface ProgressData {
+  version: number;
   enrolments: Enrolment[];
   completedItems: ProgressItem[];
   unlockedSkills: string[];
   projects: Project[];
   savedResourceIds: string[];
   completedChecklistIds: string[];
+  assets: AssetRecord[];
+  handoffs: AssetHandoffRecord[];
 }
 
 const STORAGE_KEY = 'motif_learning_progress_store';
+const CURRENT_VERSION = 2;
 
 const DEFAULT_PROGRESS: ProgressData = {
+  version: CURRENT_VERSION,
   enrolments: [
     {
       id: 'enrol-1',
@@ -55,17 +70,49 @@ const DEFAULT_PROGRESS: ProgressData = {
   ],
   savedResourceIds: ['res-01', 'res-06', 'res-16'],
   completedChecklistIds: ['b1-c1', 'b1-c2'],
+  assets: MOCK_ASSETS,
+  handoffs: [],
 };
 
 function readStore(): ProgressData {
   if (typeof window === 'undefined') return DEFAULT_PROGRESS;
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return DEFAULT_PROGRESS;
+
+    // Check for legacy external stores to migrate or prune
+    let legacySavedIds: string[] = [];
+    const legacySaved = localStorage.getItem('motif_saved_resources');
+    if (legacySaved) {
+      try {
+        const parsed = JSON.parse(legacySaved);
+        if (Array.isArray(parsed)) legacySavedIds = parsed;
+      } catch {}
+      localStorage.removeItem('motif_saved_resources');
+    }
+
+    if (localStorage.getItem('motif_progress_store')) {
+      localStorage.removeItem('motif_progress_store');
+    }
+
+    if (!raw) {
+      const initialData: ProgressData = {
+        ...DEFAULT_PROGRESS,
+        savedResourceIds: Array.from(new Set([...DEFAULT_PROGRESS.savedResourceIds, ...legacySavedIds])),
+      };
+      writeStore(initialData);
+      return initialData;
+    }
+
     const parsed = JSON.parse(raw);
-    return {
-      ...DEFAULT_PROGRESS,
-      ...parsed,
+    const savedMerged = Array.from(
+      new Set([
+        ...(Array.isArray(parsed.savedResourceIds) ? parsed.savedResourceIds : DEFAULT_PROGRESS.savedResourceIds),
+        ...legacySavedIds,
+      ])
+    );
+
+    const data: ProgressData = {
+      version: CURRENT_VERSION,
       projects: Array.isArray(parsed.projects) ? parsed.projects : DEFAULT_PROGRESS.projects,
       completedChecklistIds: Array.isArray(parsed.completedChecklistIds)
         ? parsed.completedChecklistIds
@@ -79,10 +126,17 @@ function readStore(): ProgressData {
       enrolments: Array.isArray(parsed.enrolments)
         ? parsed.enrolments
         : DEFAULT_PROGRESS.enrolments,
-      savedResourceIds: Array.isArray(parsed.savedResourceIds)
-        ? parsed.savedResourceIds
-        : DEFAULT_PROGRESS.savedResourceIds,
+      savedResourceIds: savedMerged,
+      assets: Array.isArray(parsed.assets) && parsed.assets.length > 0 ? parsed.assets : DEFAULT_PROGRESS.assets,
+      handoffs: Array.isArray(parsed.handoffs) ? parsed.handoffs : [],
     };
+
+    // If migrating from v1 or unversioned, persist upgraded state
+    if (parsed.version !== CURRENT_VERSION || legacySavedIds.length > 0) {
+      writeStore(data);
+    }
+
+    return data;
   } catch {
     return DEFAULT_PROGRESS;
   }
@@ -227,6 +281,8 @@ export const progressStore = {
     const data = readStore();
     const initialLen = data.projects.length;
     data.projects = data.projects.filter((p) => p.id !== projectId);
+    data.assets = data.assets.filter((a) => a.projectId !== projectId);
+    data.handoffs = data.handoffs.filter((h) => h.projectId !== projectId);
     writeStore(data);
     return data.projects.length < initialLen;
   },
@@ -267,18 +323,15 @@ export const progressStore = {
       );
     }
 
-    // Check if every checklist item for this brief is completed
     const allCompleted =
       allBriefItemIds.length > 0 &&
       allBriefItemIds.every((id) => data.completedChecklistIds.includes(id));
 
-    // Target project: prioritize exact projectId if provided, otherwise find by briefId
     const targetProject = projectId
       ? data.projects.find((p) => p.id === projectId)
       : data.projects.find((p) => p.briefId === briefId);
 
     if (allCompleted) {
-      // Mark brief complete in completedItems without duplicates
       if (!data.completedItems.some((c) => c.targetId === briefId && c.type === 'brief')) {
         data.completedItems.push({
           id: `prog-brief-${Date.now()}`,
@@ -287,21 +340,17 @@ export const progressStore = {
           completedAt: new Date().toISOString(),
         });
       }
-      // Unlock skills on the Skill Map without duplicates
       if (skillsUnlocked.length > 0) {
         data.unlockedSkills = Array.from(new Set([...data.unlockedSkills, ...skillsUnlocked]));
       }
-      // Update target project status to completed
       if (targetProject) {
         targetProject.status = 'completed';
         targetProject.updatedAt = 'Just now';
       }
     } else {
-      // Revert brief completion record if incomplete
       data.completedItems = data.completedItems.filter(
         (c) => !(c.type === 'brief' && c.targetId === briefId)
       );
-      // Revert target project status back to in_progress if it was previously completed
       if (targetProject && targetProject.status === 'completed') {
         targetProject.status = 'in_progress';
         targetProject.updatedAt = 'Just now';
@@ -328,7 +377,148 @@ export const progressStore = {
     writeStore(data);
     return !exists;
   },
+
+  // ------------------- Asset Records -------------------
+
+  getAssets(projectId?: string): AssetRecord[] {
+    const assets = readStore().assets || [];
+    if (!projectId) return assets;
+    return assets.filter((a) => !a.projectId || a.projectId === projectId);
+  },
+
+  getAsset(id: string): AssetRecord | null {
+    return (readStore().assets || []).find((a) => a.id === id) || null;
+  },
+
+  saveAsset(asset: AssetRecord): AssetRecord {
+    const data = readStore();
+    const idx = data.assets.findIndex((a) => a.id === asset.id);
+    if (idx >= 0) {
+      data.assets[idx] = asset;
+    } else {
+      data.assets.push(asset);
+    }
+    writeStore(data);
+    return asset;
+  },
+
+  createAsset(props: Partial<AssetRecord> & { title: string; projectId: string }): AssetRecord {
+    const data = readStore();
+    const newAsset: AssetRecord = {
+      id: props.id || `ast-${Date.now()}`,
+      projectId: props.projectId,
+      title: props.title,
+      type: props.type || 'identity',
+      department: 'create',
+      description: props.description || '',
+      previewText: props.previewText || '',
+      fileFormat: props.fileFormat || 'SVG / Specimen',
+      status: props.status || 'ready',
+      createdAt: props.createdAt || new Date().toISOString(),
+      updatedAt: 'Just now',
+      campaignId: props.campaignId,
+    };
+    data.assets.push(newAsset);
+    writeStore(data);
+    return newAsset;
+  },
+
+  deleteAsset(id: string): boolean {
+    const data = readStore();
+    const initLen = data.assets.length;
+    data.assets = data.assets.filter((a) => a.id !== id);
+    data.handoffs = data.handoffs.filter((h) => h.assetId !== id);
+    writeStore(data);
+    return data.assets.length < initLen;
+  },
+
+  // ------------------- Handoff Records -------------------
+
+  deployAssetToMarket(
+    assetId: string,
+    notes?: string
+  ): { success: boolean; handoff?: AssetHandoffRecord; error?: string } {
+    const data = readStore();
+    const asset = data.assets.find((a) => a.id === assetId);
+    if (!asset) {
+      return { success: false, error: `Asset ${assetId} not found.` };
+    }
+
+    const project = data.projects.find((p) => p.id === asset.projectId);
+    if (!project) {
+      return { success: false, error: `Parent project ${asset.projectId} not found.` };
+    }
+
+    const existingHandoff = data.handoffs.find(
+      (h) => h.assetId === assetId && h.toDepartment === 'market' && h.status !== 'archived'
+    );
+    if (existingHandoff) {
+      return { success: true, handoff: existingHandoff };
+    }
+
+    const newHandoff: AssetHandoffRecord = {
+      id: `hnd-${Date.now()}`,
+      assetId: asset.id,
+      projectId: asset.projectId,
+      fromDepartment: 'create',
+      toDepartment: 'market',
+      status: 'available',
+      deployedAt: new Date().toISOString(),
+      notes: notes || `Deployed from project “${project.title}” for campaign integration.`,
+    };
+
+    asset.status = 'deployed';
+    asset.updatedAt = 'Just now';
+
+    data.handoffs.unshift(newHandoff);
+    writeStore(data);
+
+    return { success: true, handoff: newHandoff };
+  },
+
+  getHandoffs(toDept?: DepartmentId, statusFilter?: HandoffStatus): AssetHandoffRecord[] {
+    const list = readStore().handoffs || [];
+    return list.filter((h) => {
+      if (toDept && h.toDepartment !== toDept) return false;
+      if (statusFilter && h.status !== statusFilter) return false;
+      return true;
+    });
+  },
+
+  getDeployedAssets(toDept: DepartmentId = 'market'): DeployedAssetView[] {
+    const data = readStore();
+    const handoffs = (data.handoffs || []).filter((h) => h.toDepartment === toDept);
+    return handoffs.map((handoff) => {
+      const asset = data.assets.find((a) => a.id === handoff.assetId) || {
+        id: handoff.assetId,
+        projectId: handoff.projectId,
+        title: 'Archived Asset',
+        type: 'identity' as const,
+        department: 'create' as const,
+        fileFormat: 'Unknown',
+        status: 'deployed' as const,
+        createdAt: handoff.deployedAt,
+        updatedAt: handoff.deployedAt,
+      };
+      const project = data.projects.find((p) => p.id === handoff.projectId);
+      return { handoff, asset, project };
+    });
+  },
+
+  isAssetDeployed(assetId: string): boolean {
+    return (readStore().handoffs || []).some(
+      (h) => h.assetId === assetId && h.status !== 'archived'
+    );
+  },
+
+  updateHandoffStatus(handoffId: string, status: HandoffStatus): AssetHandoffRecord | null {
+    const data = readStore();
+    const handoff = data.handoffs.find((h) => h.id === handoffId);
+    if (!handoff) return null;
+    handoff.status = status;
+    writeStore(data);
+    return handoff;
+  },
 };
 
 export default progressStore;
-

@@ -1,5 +1,4 @@
 export * from './learnService';
-import { storageService } from '../../../services/storage';
 
 export async function getSkillMap() {
   return [
@@ -10,12 +9,7 @@ export async function getSkillMap() {
   ];
 }
 
-export async function startBrief(briefTitle: string): Promise<{ projectId: string; redirected: boolean }> {
-  storageService.addHandoffLog(
-    'learn',
-    'create',
-    `Started brief "${briefTitle}". New project opened in Create.`
-  );
+export async function startBrief(_briefTitle: string): Promise<{ projectId: string; redirected: boolean }> {
   return {
     projectId: 'proj-brief-' + Date.now(),
     redirected: true,

@@ -1,5 +1,14 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Enrolment, ProgressItem, Project } from '../types';
+import {
+  Enrolment,
+  ProgressItem,
+  Project,
+  AssetRecord,
+  AssetHandoffRecord,
+  DeployedAssetView,
+  DepartmentId,
+  HandoffStatus,
+} from '../types';
 import { progressStore } from '../services/storage';
 
 export function useProgress() {
@@ -7,9 +16,10 @@ export function useProgress() {
   const [completedItems, setCompletedItems] = useState<ProgressItem[]>(() => progressStore.get().completedItems);
   const [unlockedSkills, setUnlockedSkills] = useState<string[]>(() => progressStore.getUnlockedSkills());
   const [projects, setProjects] = useState<Project[]>(() => progressStore.getProjects());
-
   const [savedResourceIds, setSavedResourceIds] = useState<string[]>(() => progressStore.getSavedResourceIds());
   const [completedChecklistIds, setCompletedChecklistIds] = useState<string[]>(() => progressStore.getCompletedChecklistIds());
+  const [assets, setAssets] = useState<AssetRecord[]>(() => progressStore.getAssets());
+  const [handoffs, setHandoffs] = useState<AssetHandoffRecord[]>(() => progressStore.getHandoffs());
 
   const sync = useCallback(() => {
     const data = progressStore.get();
@@ -19,6 +29,8 @@ export function useProgress() {
     setProjects(data.projects);
     setSavedResourceIds(data.savedResourceIds || []);
     setCompletedChecklistIds(data.completedChecklistIds || []);
+    setAssets(data.assets || []);
+    setHandoffs(data.handoffs || []);
   }, []);
 
   useEffect(() => {
@@ -136,6 +148,60 @@ export function useProgress() {
     [sync]
   );
 
+  // Asset helpers
+  const getAssets = useCallback((projectId?: string) => {
+    return progressStore.getAssets(projectId);
+  }, []);
+
+  const getAsset = useCallback((id: string) => {
+    return progressStore.getAsset(id);
+  }, []);
+
+  const createAsset = useCallback(
+    (props: Partial<AssetRecord> & { title: string; projectId: string }) => {
+      const a = progressStore.createAsset(props);
+      sync();
+      return a;
+    },
+    [sync]
+  );
+
+  const deleteAsset = useCallback(
+    (id: string) => {
+      const ok = progressStore.deleteAsset(id);
+      sync();
+      return ok;
+    },
+    [sync]
+  );
+
+  // Handoff helpers
+  const deployAssetToMarket = useCallback(
+    (assetId: string, notes?: string) => {
+      const res = progressStore.deployAssetToMarket(assetId, notes);
+      sync();
+      return res;
+    },
+    [sync]
+  );
+
+  const getDeployedAssets = useCallback((toDept: DepartmentId = 'market'): DeployedAssetView[] => {
+    return progressStore.getDeployedAssets(toDept);
+  }, []);
+
+  const isAssetDeployed = useCallback((assetId: string) => {
+    return progressStore.isAssetDeployed(assetId);
+  }, []);
+
+  const updateHandoffStatus = useCallback(
+    (handoffId: string, status: HandoffStatus) => {
+      const h = progressStore.updateHandoffStatus(handoffId, status);
+      sync();
+      return h;
+    },
+    [sync]
+  );
+
   return {
     enrolments,
     completedItems,
@@ -143,6 +209,8 @@ export function useProgress() {
     projects,
     savedResourceIds,
     completedChecklistIds,
+    assets,
+    handoffs,
     enrol,
     completeLesson,
     completeBrief,
@@ -156,9 +224,16 @@ export function useProgress() {
     toggleSaveResource,
     toggleChecklistItem,
     isChecklistCompleted,
+    getAssets,
+    getAsset,
+    createAsset,
+    deleteAsset,
+    deployAssetToMarket,
+    getDeployedAssets,
+    isAssetDeployed,
+    updateHandoffStatus,
     refresh: sync,
   };
 }
 
 export default useProgress;
-

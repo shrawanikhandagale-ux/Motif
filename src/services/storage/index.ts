@@ -3,25 +3,10 @@ import { Profile, DashboardTilesConfig, DashboardTask } from '../../types';
 
 const KEYS = {
   THEME: 'motif_theme_preference',
-  PROGRESS_STORE: 'motif_progress_store',
   PROFILE_STORE: 'motif_user_profile',
   DASHBOARD_CONFIG: 'motif_dashboard_config',
   DASHBOARD_TASKS: 'motif_dashboard_tasks',
 } as const;
-
-export interface ProgressState {
-  completedCourseIds: string[];
-  activeBriefId?: string;
-  activeProjectId?: string;
-  handOffLogs: Array<{ id: string; fromDept: string; toDept: string; summary: string; timestamp: string }>;
-}
-
-const defaultProgress: ProgressState = {
-  completedCourseIds: ['path-branding-01'],
-  activeBriefId: 'brief-01',
-  activeProjectId: 'proj-01',
-  handOffLogs: [{ id: 'log-1', fromDept: 'learn', toDept: 'create', summary: 'Prompt "Rebrand collective" sent to Studio', timestamp: 'Today' }],
-};
 
 export const DEFAULT_DASHBOARD_CONFIG: DashboardTilesConfig = {
   departmentsStrip: true,
@@ -48,6 +33,10 @@ function write(key: string, value: unknown): void {
   } catch {}
 }
 
+/**
+ * Storage Service
+ * Handles user preferences and UI configuration separate from the operational progressStore.
+ */
 export const storageService = {
   getTheme(): 'light' | 'dark' | 'system' {
     if (typeof window === 'undefined') return 'system';
@@ -56,27 +45,6 @@ export const storageService = {
 
   setTheme(theme: 'light' | 'dark' | 'system'): void {
     if (typeof window !== 'undefined') localStorage.setItem(KEYS.THEME, theme);
-  },
-
-  getProgress: () => read<ProgressState>(KEYS.PROGRESS_STORE, defaultProgress),
-  saveProgress: (state: ProgressState) => write(KEYS.PROGRESS_STORE, state),
-
-  toggleCourseModule(id: string): ProgressState {
-    const curr = this.getProgress();
-    const has = curr.completedCourseIds.includes(id);
-    const updated = { ...curr, completedCourseIds: has ? curr.completedCourseIds.filter((x) => x !== id) : [...curr.completedCourseIds, id] };
-    this.saveProgress(updated);
-    return updated;
-  },
-
-  addHandoffLog(fromDept: string, toDept: string, summary: string): ProgressState {
-    const curr = this.getProgress();
-    const updated = {
-      ...curr,
-      handOffLogs: [{ id: `log-${Date.now()}`, fromDept, toDept, summary, timestamp: 'Just now' }, ...curr.handOffLogs.slice(0, 9)],
-    };
-    this.saveProgress(updated);
-    return updated;
   },
 
   getProfile: () => read<Profile | null>(KEYS.PROFILE_STORE, null),
@@ -89,3 +57,5 @@ export const storageService = {
   getDashboardTasks: (fallback: DashboardTask[]) => read<DashboardTask[]>(KEYS.DASHBOARD_TASKS, fallback),
   saveDashboardTasks: (tasks: DashboardTask[]) => write(KEYS.DASHBOARD_TASKS, tasks),
 };
+
+export default storageService;

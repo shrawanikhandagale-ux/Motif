@@ -1,0 +1,2 @@
+export { IncomingAssetsTray } from './IncomingAssetsTray';
+

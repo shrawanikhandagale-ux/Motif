@@ -7,5 +7,3 @@ export { ProgressBar, type ProgressBarProps } from './ProgressBar';
 export { Sticker, type StickerProps } from './Sticker';
 export { SectionHeading, type SectionHeadingProps } from './SectionHeading';
 export { Badge, type BadgeProps } from './Badge';
-export { Card, type CardProps } from './Card';
-

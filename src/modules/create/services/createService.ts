@@ -1,6 +1,5 @@
-import { ProjectRecord, AssetRecord } from '../../../types';
-import { progressStore, storageService } from '../../../services/storage';
-import { MOCK_ASSETS } from './mock/projects';
+import { ProjectRecord, AssetRecord, AssetHandoffRecord } from '../../../types';
+import { progressStore } from '../../../services/storage';
 
 /**
  * Create Service
@@ -35,17 +34,37 @@ export const createService = {
   },
 
   async getAssets(projectId?: string): Promise<AssetRecord[]> {
-    if (!projectId) return MOCK_ASSETS;
-    return MOCK_ASSETS.filter((a) => !a.projectId || a.projectId === projectId);
+    return progressStore.getAssets(projectId);
   },
 
-  async pushToMarket(assetTitle: string): Promise<boolean> {
-    storageService.addHandoffLog(
-      'create',
-      'market',
-      `Sent asset "${assetTitle}" to Market for campaign assembly.`
-    );
-    return true;
+  async getAsset(id: string): Promise<AssetRecord | null> {
+    return progressStore.getAsset(id);
+  },
+
+  async createAsset(props: Partial<AssetRecord> & { title: string; projectId: string }): Promise<AssetRecord> {
+    return progressStore.createAsset(props);
+  },
+
+  async deleteAsset(id: string): Promise<boolean> {
+    return progressStore.deleteAsset(id);
+  },
+
+  async deployAsset(
+    assetId: string,
+    notes?: string
+  ): Promise<{ success: boolean; handoff?: AssetHandoffRecord; error?: string }> {
+    return progressStore.deployAssetToMarket(assetId, notes);
+  },
+
+  async pushToMarket(assetIdOrTitle: string): Promise<boolean> {
+    // Locate asset either by id or by title
+    const all = progressStore.getAssets();
+    const asset = all.find((a) => a.id === assetIdOrTitle || a.title === assetIdOrTitle);
+    if (asset) {
+      const res = progressStore.deployAssetToMarket(asset.id);
+      return res.success;
+    }
+    return false;
   },
 };
 
@@ -57,8 +76,11 @@ export const {
   updateProjectStatus,
   deleteProject,
   getAssets,
+  getAsset,
+  createAsset,
+  deleteAsset,
+  deployAsset,
   pushToMarket,
 } = createService;
 
 export default createService;
-

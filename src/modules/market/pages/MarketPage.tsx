@@ -1,12 +1,13 @@
 import React from 'react';
 import { SectionHeading, Tile, Button, Sticker } from '../../../components/ui';
 import { HandoffNotice } from '../../../components/shared/HandoffNotice';
+import { IncomingAssetsTray } from '../components/IncomingAssetsTray';
 import { Share2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 export const MarketPage: React.FC = () => {
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 max-w-7xl mx-auto">
       <SectionHeading
         as="h1"
         kicker="Department 03 · The Hub"
@@ -27,41 +28,48 @@ export const MarketPage: React.FC = () => {
         text="Campaign milestones and deliverable timelines attach directly to clients in Manage."
       />
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Tile accent="none" shadow="default" className="space-y-3">
-          <span className="font-mono text-xs text-[var(--ox)] font-bold uppercase">Live Campaign</span>
-          <h3 className="font-display font-bold text-xl">Issue Zero Drop Sequence</h3>
-          <p className="text-sm opacity-85 leading-relaxed">
-            Substack manifesto announcement to 18,400 readers with a 24.8% click rate.
-          </p>
-          <div className="pt-2">
-            <Link to="/manage">
-              <Button variant="primary" size="sm">
-                <Share2 className="w-3.5 h-3.5 mr-1" />
-                <span>Attach to Client</span>
-              </Button>
-            </Link>
-          </div>
-        </Tile>
+      {/* Incoming Deliverables from Studio */}
+      <IncomingAssetsTray />
 
-        <Tile accent="none" shadow="default" className="space-y-3">
-          <span className="font-mono text-xs text-[var(--ox)] font-bold uppercase">Planned Drop</span>
-          <h3 className="font-display font-bold text-xl">Acid Merch Flash Drop</h3>
-          <p className="text-sm opacity-85 leading-relaxed">
-            Targeted Instagram drop with vector separations and limited vinyl release.
-          </p>
-          <div className="pt-2">
-            <Button variant="secondary" size="sm">Edit Schedule</Button>
-          </div>
-        </Tile>
+      {/* Active Campaign Distribution Grids */}
+      <div className="space-y-4 pt-4 border-t-2 border-[var(--line)]">
+        <h2 className="font-display font-bold text-xl uppercase tracking-tight">Active Distribution Channels</h2>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <Tile accent="none" shadow="default" className="space-y-3">
+            <span className="font-mono text-xs text-[var(--ox)] font-bold uppercase">Live Campaign</span>
+            <h3 className="font-display font-bold text-xl">Issue Zero Drop Sequence</h3>
+            <p className="text-sm opacity-85 leading-relaxed">
+              Substack manifesto announcement to 18,400 readers with a 24.8% click rate.
+            </p>
+            <div className="pt-2">
+              <Link to="/manage">
+                <Button variant="primary" size="sm">
+                  <Share2 className="w-3.5 h-3.5 mr-1" />
+                  <span>Attach to Client</span>
+                </Button>
+              </Link>
+            </div>
+          </Tile>
 
-        <Tile accent="electric" shadow="default" className="space-y-3">
-          <span className="font-mono text-xs font-bold uppercase text-[#171717]">Reach Intelligence</span>
-          <h3 className="font-display font-bold text-xl text-[#171717]">Distribution Hub</h3>
-          <p className="text-xs font-mono text-[#171717] opacity-90 leading-relaxed">
-            Unified audience records: 78.6k total reach across newsletters and social channels.
-          </p>
-        </Tile>
+          <Tile accent="none" shadow="default" className="space-y-3">
+            <span className="font-mono text-xs text-[var(--ox)] font-bold uppercase">Planned Drop</span>
+            <h3 className="font-display font-bold text-xl">Acid Merch Flash Drop</h3>
+            <p className="text-sm opacity-85 leading-relaxed">
+              Targeted Instagram drop with vector separations and limited vinyl release.
+            </p>
+            <div className="pt-2">
+              <Button variant="secondary" size="sm">Edit Schedule</Button>
+            </div>
+          </Tile>
+
+          <Tile accent="electric" shadow="default" className="space-y-3">
+            <span className="font-mono text-xs font-bold uppercase text-[#171717]">Reach Intelligence</span>
+            <h3 className="font-display font-bold text-xl text-[#171717]">Distribution Hub</h3>
+            <p className="text-xs font-mono text-[#171717] opacity-90 leading-relaxed">
+              Unified audience records: 78.6k total reach across newsletters and social channels.
+            </p>
+          </Tile>
+        </div>
       </div>
     </div>
   );

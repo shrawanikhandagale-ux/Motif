@@ -1,20 +1,11 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Resource } from '../../../types';
 import { learnService } from '../services';
-
-const BOOKMARK_KEY = 'motif_saved_resources';
+import { useProgress } from '../../../hooks';
 
 export function useResources(categoryOrDomain?: string, searchQuery: string = '') {
+  const { savedResourceIds, toggleSaveResource } = useProgress();
   const [resources, setResources] = useState<Resource[]>([]);
-  const [savedIds, setSavedIds] = useState<string[]>(() => {
-    if (typeof window === 'undefined') return [];
-    try {
-      const stored = localStorage.getItem(BOOKMARK_KEY);
-      return stored ? JSON.parse(stored) : [];
-    } catch {
-      return [];
-    }
-  });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -35,20 +26,25 @@ export function useResources(categoryOrDomain?: string, searchQuery: string = ''
     });
   }, [categoryOrDomain, searchQuery]);
 
-  const toggleBookmark = useCallback((id: string) => {
-    setSavedIds((prev) => {
-      const updated = prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id];
-      try {
-        localStorage.setItem(BOOKMARK_KEY, JSON.stringify(updated));
-      } catch {}
-      return updated;
-    });
-  }, []);
+  const toggleBookmark = useCallback(
+    (id: string) => {
+      return toggleSaveResource(id);
+    },
+    [toggleSaveResource]
+  );
 
-  const isSaved = useCallback((id: string) => savedIds.includes(id), [savedIds]);
+  const isSaved = useCallback(
+    (id: string) => savedResourceIds.includes(id),
+    [savedResourceIds]
+  );
 
-  return { resources, loading, savedIds, toggleBookmark, isSaved };
+  return {
+    resources,
+    loading,
+    savedIds: savedResourceIds,
+    toggleBookmark,
+    isSaved,
+  };
 }
 
 export default useResources;
-
