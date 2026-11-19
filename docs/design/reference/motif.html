@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>MOTIF – Built for the offscript</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,800&family=DM+Mono:wght@400&family=Instrument+Sans:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#F1EBDD;--ink:#171717;--ox:#702C35;--acid:#D9E638;--elec:#A8B8E8;--line:#171717;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#171717;--ink:#F1EBDD;--line:#F1EBDD}}
+:root[data-theme="dark"]{--bg:#171717;--ink:#F1EBDD;--line:#F1EBDD}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 17px/1.55 "Instrument Sans",system-ui,sans-serif}
+.wrap{max-width:1120px;margin:0 auto;padding:0 24px}
+.mono{font-family:"DM Mono",ui-monospace,monospace;font-size:13px}
+header{display:flex;justify-content:space-between;align-items:center;padding:20px 0;border-bottom:2px solid var(--line)}
+.logo{font:800 28px "Bricolage Grotesque",sans-serif;letter-spacing:-.04em}
+.hero{position:relative;padding:56px 0 72px;overflow:hidden}
+h1{font:800 clamp(56px,13vw,168px)/.86 "Bricolage Grotesque",sans-serif;letter-spacing:-.05em;margin:0;max-width:9ch}
+h1 span{display:block}
+h1 .skew{transform:rotate(-2deg) translateX(.2em);transform-origin:left}
+.dots{position:absolute;right:-60px;top:30px;width:min(46vw,460px);aspect-ratio:1;border-radius:50%;
+background:radial-gradient(circle,var(--ox) 38%,transparent 40%) 0 0/14px 14px;
+-webkit-mask:linear-gradient(115deg,#000 20%,transparent 75%);mask:linear-gradient(115deg,#000 20%,transparent 75%);z-index:0}
+.sticker{position:absolute;right:8%;bottom:56px;background:var(--acid);color:#171717;padding:14px 18px;font:800 20px/1.1 "Bricolage Grotesque",sans-serif;
+transform:rotate(6deg);border:2px solid #171717;box-shadow:6px 6px 0 #171717;max-width:230px;z-index:2}
+.hero p{max-width:46ch;margin:32px 0 0;position:relative;z-index:2;font-size:19px}
+h1{position:relative;z-index:2}
+h2{font:800 clamp(32px,5vw,56px)/1 "Bricolage Grotesque",sans-serif;letter-spacing:-.03em;margin:0 0 12px}
+section{padding:64px 0;border-top:2px solid var(--line)}
+.flow{display:grid;grid-template-columns:repeat(5,1fr);gap:0;border:2px solid var(--line);margin-top:28px}
+.flow button{all:unset;cursor:pointer;padding:22px 14px;border-right:2px solid var(--line);font:800 20px "Bricolage Grotesque",sans-serif;letter-spacing:-.02em;transition:background .15s,color .15s}
+.flow button:last-child{border-right:0}
+.flow button:hover{background:var(--elec);color:#171717}
+.flow button:focus-visible{outline:3px solid var(--ox);outline-offset:-6px}
+.flow button[aria-selected="true"]{background:var(--ink);color:var(--bg)}
+.flow small{display:block;font:400 12px "DM Mono",monospace;margin-top:6px;opacity:.75;letter-spacing:0}
+.panel{display:grid;grid-template-columns:1.1fr 1fr;gap:32px;padding:32px;border:2px solid var(--line);border-top:0;min-height:280px}
+.panel h3{font:800 34px/1 "Bricolage Grotesque",sans-serif;margin:0 0 12px;letter-spacing:-.03em}
+.panel ul{margin:0;padding-left:1.1em}
+.panel .hand{background:var(--acid);color:#171717;padding:20px;border:2px solid #171717;align-self:start;box-shadow:6px 6px 0 var(--ox)}
+.hand b{font-family:"DM Mono",monospace;font-weight:400;font-size:13px}
+.hand p{margin:8px 0 0;font:600 20px/1.25 "Instrument Sans",sans-serif}
+.shared{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-top:24px}
+.shared div{border:2px solid var(--line);padding:12px 14px;font-weight:600}
+.shared div:nth-child(3n+1){background:var(--elec);color:#171717}
+footer{padding:40px 0 56px;border-top:2px solid var(--line)}
+@media(max-width:760px){.flow{grid-template-columns:1fr 1fr}.flow button{border-bottom:2px solid var(--line)}.panel{grid-template-columns:1fr;padding:20px}.sticker{position:relative;right:auto;bottom:auto;margin-top:32px;display:inline-block}.dots{opacity:.5}}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header><div class="logo">motif.</div><div class="mono">prototype 0.1</div></header>
+
+<div class="hero">
+<div class="dots" aria-hidden="true"></div>
+<h1><span>Built</span><span>for the</span><span class="skew">offscript.</span></h1>
+<p>One workspace where you learn a skill, make the thing, launch it, run the work and see what happened. Not by the book. Built by you.</p>
+<div class="sticker">Idea in. Real thing out.</div>
+</div>
+
+<section>
+<h2>One idea, five departments.</h2>
+<p style="max-width:56ch;margin:0">Pick a department. Everything you make there travels to the next one.</p>
+<div class="flow" role="tablist" id="tabs"></div>
+<div class="panel" id="panel" role="tabpanel" aria-live="polite"></div>
+</section>
+
+<section>
+<h2>What travels between them.</h2>
+<p style="max-width:56ch;margin:0">The departments share one account and one set of records, so nothing gets retyped.</p>
+<div class="shared">
+<div>Profiles</div><div>Workspaces</div><div>Projects</div><div>Assets</div><div>Clients</div><div>Campaigns</div><div>Courses</div><div>Activity</div>
+</div>
+</section>
+
+<footer class="mono">Next up: LEARN. Paths, briefs and the Skill Map.</footer>
+</div>
+
+<script>
+const D=[
+{n:"Learn",s:"the academy",t:"Learn by making.",l:["Guided paths for branding, design, UI/UX and marketing","A curated library to explore in any order","Briefs: real prompts with a deadline","A Skill Map that lights up as you build"],h:"Start a brief and it opens as a project in Create."},
+{n:"Create",s:"the studio",t:"Make the work.",l:["Projects with moodboards and references","Brand and design resources in one place","Content drafts and asset library","Notes that stay attached to the work"],h:"Finished assets are ready to use in Market."},
+{n:"Market",s:"the hub",t:"Put it out there.",l:["Campaign plans built from your assets","Content calendar across channels","Brand positioning worksheets","Social strategy templates"],h:"Campaigns attach to the client they are for in Manage."},
+{n:"Manage",s:"the workspace",t:"Run the work.",l:["Projects, tasks and boards you can drag around","A light client list","Collaboration with teammates and clients","Your own workflow, your own layout"],h:"Live campaigns report their results to Analyze & Grow."},
+{n:"Analyze",s:"& grow",t:"See what worked.",l:["Campaign performance in one view","Business and growth metrics","Progress reports you can share","Insights that point back to what to learn next"],h:"A weak result suggests a path in Learn. The loop closes."}
+];
+const tabs=document.getElementById("tabs"),panel=document.getElementById("panel");
+function show(i){
+ [...tabs.children].forEach((b,j)=>b.setAttribute("aria-selected",j===i));
+ const d=D[i],next=D[(i+1)%5].n;
+ panel.innerHTML=`<div><h3>${d.t}</h3><ul>${d.l.map(x=>`<li>${x}</li>`).join("")}</ul></div><div class="hand"><b>hands off to ${next}</b><p>${d.h}</p></div>`;
+}
+D.forEach((d,i)=>{const b=document.createElement("button");b.setAttribute("role","tab");b.innerHTML=`${d.n}<small>${d.s}</small>`;b.onclick=()=>show(i);tabs.appendChild(b)});
+show(0);
+</script>
+</body>
+</html>
