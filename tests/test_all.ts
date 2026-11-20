@@ -47,7 +47,7 @@ console.log('B1-T4: Project reverted to in_progress:', progressStore.getProject(
 
 // --- Batch 2 Tests ---
 // 5. Versioning and migration
-console.log('B2-T5: Store version is 2:', progressStore.get().version === 2);
+console.log('B2-T5: Store version is 3:', progressStore.get().version === 3);
 
 // 6. Asset creation & scoping
 const ast = progressStore.createAsset({ projectId: p1.id, title: 'Acid Lookbook', type: 'graphic', fileFormat: 'PDF' });
@@ -71,6 +71,31 @@ console.log('B2-T9: Market assigned status updated:', updatedH?.status === 'assi
 // 10. Separation of UI preferences
 storageService.setTheme('system');
 console.log('B2-T10: Theme in storageService:', storageService.getTheme() === 'system');
+
+// --- Batch 3: Product Quality & Cross-Department Integration Tests ---
+// 11. Client creation & persistence
+const c1 = progressStore.createClient({ name: 'Hyperlink Studio', contactEmail: 'hi@hyperlink.design', monthlyRetainer: 5000 });
+console.log('B3-T11: Client created and persisted:', progressStore.getClient(c1.id)?.name === 'Hyperlink Studio');
+
+// 12. Deliverable stage advancing & client project count sync
+const del1 = progressStore.createDeliverable({ title: 'Identity Specimen', clientId: c1.id, clientName: c1.name, status: 'Doing' });
+console.log('B3-T12: Deliverable created in Doing:', progressStore.getDeliverable(del1.id)?.status === 'Doing');
+console.log('B3-T12: Client active count updated:', progressStore.getClient(c1.id)?.activeProjectsCount === 1);
+progressStore.updateDeliverableStage(del1.id, 'Done');
+console.log('B3-T12: Deliverable advanced to Done:', progressStore.getDeliverable(del1.id)?.status === 'Done');
+console.log('B3-T12: Client active count decremented on Done:', progressStore.getClient(c1.id)?.activeProjectsCount === 0);
+
+// 13. Campaign creation & asset attachment
+const cmp1 = progressStore.createCampaign({ title: 'Winter Manifesto Drop', channel: 'substack', reach: '50k' });
+console.log('B3-T13: Campaign created:', progressStore.getCampaign(cmp1.id)?.title === 'Winter Manifesto Drop');
+const attachRes = progressStore.attachAssetToCampaign(cmp1.id, ast.id);
+console.log('B3-T13: Asset attached to campaign:', attachRes && progressStore.getAsset(ast.id)?.campaignId === cmp1.id);
+
+// 14. Campaign attached to Client creates Manage Deliverable
+const attachCliRes = progressStore.attachCampaignToClient(cmp1.id, c1.id, c1.name);
+console.log('B3-T14: Campaign attached to client:', attachCliRes);
+const clientDeliverables = progressStore.getDeliverables(c1.id);
+console.log('B3-T14: Client deliverable automatically created:', clientDeliverables.some(d => d.title.includes(cmp1.title)));
 
 console.log('=== ALL TESTS PASSED! ===');
 

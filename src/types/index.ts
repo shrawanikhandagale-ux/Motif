@@ -1,5 +1,45 @@
 import { Project } from './learn';
 export * from './learn';
+export * from './shared';
+
+export type {
+  LearningProvider,
+  LearningModule,
+  LearningPath,
+  LearningResource,
+  UserSkill,
+  LearningProgress,
+  PracticalBrief,
+  ResourceType,
+  PublicationStatus,
+  DiscoveryMethod,
+  AvailabilityStatus,
+  PricingType,
+  ProviderType,
+  AttributionAndLicensing,
+  LessonSourceAttribution,
+  AssetSlotTemplate,
+} from './learning';
+
+export type {
+  ProjectBrief,
+  ProjectTask,
+  ProjectAsset,
+  ProjectDocument,
+  Deliverable,
+  ToolIntegration,
+  ProjectStatus,
+  SourceBriefType,
+  TaskStatus,
+  TaskPriority,
+  CreativeAssetType,
+  CreativeAssetStatus,
+  DocumentType,
+  DeliverableType,
+  DeliverableStatus,
+  IntegrationCategory,
+  IntegrationStatus,
+} from './creative';
 
 export type DepartmentId = 'learn' | 'create' | 'market' | 'manage' | 'analyze';
 
@@ -96,14 +136,37 @@ export interface ClientRecord {
   status: 'lead' | 'active' | 'archived';
   activeProjectsCount: number;
   contactEmail: string;
+  monthlyRetainer?: number;
+  notes?: string;
+}
+
+export type DeliverableStage = 'Queued' | 'Doing' | 'In Review' | 'Done';
+
+export interface DeliverableRecord {
+  id: string;
+  title: string;
+  clientId: string;
+  clientName: string;
+  projectId?: string;
+  assetId?: string;
+  status: DeliverableStage;
+  dueDate?: string;
+  notes?: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface CampaignRecord {
   id: string;
   title: string;
   channel: 'instagram' | 'email' | 'substack' | 'x' | 'multi';
-  status: 'planned' | 'live' | 'completed';
+  status: 'planned' | 'live' | 'completed' | 'draft';
+  dateNotice?: string;
+  reach?: string;
+  clientId?: string;
   clientName?: string;
+  assetIds?: string[];
+  description?: string;
   metrics?: {
     reach: string;
     engagement: string;
@@ -148,4 +211,3 @@ export interface DashboardTask {
   dueDate: string;
   completed: boolean;
 }
-

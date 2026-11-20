@@ -8,6 +8,10 @@ import {
   DeployedAssetView,
   DepartmentId,
   HandoffStatus,
+  ClientRecord,
+  CampaignRecord,
+  DeliverableRecord,
+  DeliverableStage,
 } from '../types';
 import { progressStore } from '../services/storage';
 
@@ -20,6 +24,9 @@ export function useProgress() {
   const [completedChecklistIds, setCompletedChecklistIds] = useState<string[]>(() => progressStore.getCompletedChecklistIds());
   const [assets, setAssets] = useState<AssetRecord[]>(() => progressStore.getAssets());
   const [handoffs, setHandoffs] = useState<AssetHandoffRecord[]>(() => progressStore.getHandoffs());
+  const [clients, setClients] = useState<ClientRecord[]>(() => progressStore.getClients());
+  const [campaigns, setCampaigns] = useState<CampaignRecord[]>(() => progressStore.getCampaigns());
+  const [deliverables, setDeliverables] = useState<DeliverableRecord[]>(() => progressStore.getDeliverables());
 
   const sync = useCallback(() => {
     const data = progressStore.get();
@@ -31,6 +38,9 @@ export function useProgress() {
     setCompletedChecklistIds(data.completedChecklistIds || []);
     setAssets(data.assets || []);
     setHandoffs(data.handoffs || []);
+    setClients(data.clients || []);
+    setCampaigns(data.campaigns || []);
+    setDeliverables(data.deliverables || []);
   }, []);
 
   useEffect(() => {
@@ -202,6 +212,120 @@ export function useProgress() {
     [sync]
   );
 
+  // Client helpers
+  const getClients = useCallback(() => progressStore.getClients(), []);
+  const getClient = useCallback((id: string) => progressStore.getClient(id), []);
+  const createClient = useCallback(
+    (props: Partial<ClientRecord> & { name: string; contactEmail: string }) => {
+      const c = progressStore.createClient(props);
+      sync();
+      return c;
+    },
+    [sync]
+  );
+  const updateClient = useCallback(
+    (id: string, props: Partial<ClientRecord>) => {
+      const c = progressStore.updateClient(id, props);
+      sync();
+      return c;
+    },
+    [sync]
+  );
+  const deleteClient = useCallback(
+    (id: string) => {
+      const ok = progressStore.deleteClient(id);
+      sync();
+      return ok;
+    },
+    [sync]
+  );
+
+  // Deliverable helpers
+  const getDeliverables = useCallback(
+    (clientId?: string) => progressStore.getDeliverables(clientId),
+    []
+  );
+  const getDeliverable = useCallback((id: string) => progressStore.getDeliverable(id), []);
+  const createDeliverable = useCallback(
+    (props: Partial<DeliverableRecord> & { title: string; clientName: string }) => {
+      const d = progressStore.createDeliverable(props);
+      sync();
+      return d;
+    },
+    [sync]
+  );
+  const updateDeliverableStage = useCallback(
+    (id: string, stage: DeliverableStage) => {
+      const d = progressStore.updateDeliverableStage(id, stage);
+      sync();
+      return d;
+    },
+    [sync]
+  );
+  const updateDeliverable = useCallback(
+    (id: string, props: Partial<DeliverableRecord>) => {
+      const d = progressStore.updateDeliverable(id, props);
+      sync();
+      return d;
+    },
+    [sync]
+  );
+  const deleteDeliverable = useCallback(
+    (id: string) => {
+      const ok = progressStore.deleteDeliverable(id);
+      sync();
+      return ok;
+    },
+    [sync]
+  );
+
+  // Campaign helpers
+  const getCampaigns = useCallback(
+    (clientId?: string) => progressStore.getCampaigns(clientId),
+    []
+  );
+  const getCampaign = useCallback((id: string) => progressStore.getCampaign(id), []);
+  const createCampaign = useCallback(
+    (props: Partial<CampaignRecord> & { title: string }) => {
+      const c = progressStore.createCampaign(props);
+      sync();
+      return c;
+    },
+    [sync]
+  );
+  const updateCampaign = useCallback(
+    (id: string, props: Partial<CampaignRecord>) => {
+      const c = progressStore.updateCampaign(id, props);
+      sync();
+      return c;
+    },
+    [sync]
+  );
+  const updateCampaignStatus = useCallback(
+    (id: string, status: CampaignRecord['status']) => {
+      const c = progressStore.updateCampaignStatus(id, status);
+      sync();
+      return c;
+    },
+    [sync]
+  );
+  const attachAssetToCampaign = useCallback(
+    (campaignId: string, assetId: string) => {
+      const ok = progressStore.attachAssetToCampaign(campaignId, assetId);
+      sync();
+      return ok;
+    },
+    [sync]
+  );
+  const attachCampaignToClient = useCallback(
+    (campaignId: string, clientId: string, clientName: string) => {
+      const ok = progressStore.attachCampaignToClient(campaignId, clientId, clientName);
+      sync();
+      return ok;
+    },
+    [sync]
+  );
+
   return {
     enrolments,
     completedItems,
@@ -211,6 +335,9 @@ export function useProgress() {
     completedChecklistIds,
     assets,
     handoffs,
+    clients,
+    campaigns,
+    deliverables,
     enrol,
     completeLesson,
     completeBrief,
@@ -232,6 +359,24 @@ export function useProgress() {
     getDeployedAssets,
     isAssetDeployed,
     updateHandoffStatus,
+    getClients,
+    getClient,
+    createClient,
+    updateClient,
+    deleteClient,
+    getDeliverables,
+    getDeliverable,
+    createDeliverable,
+    updateDeliverableStage,
+    updateDeliverable,
+    deleteDeliverable,
+    getCampaigns,
+    getCampaign,
+    createCampaign,
+    updateCampaign,
+    updateCampaignStatus,
+    attachAssetToCampaign,
+    attachCampaignToClient,
     refresh: sync,
   };
 }

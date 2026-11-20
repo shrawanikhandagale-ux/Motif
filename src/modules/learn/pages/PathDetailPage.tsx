@@ -1,12 +1,16 @@
 import React from 'react';
-import { useParams, Link } from 'react-router-dom';
-import { Clock, CheckCircle2, ArrowLeft, Play, Sparkles, FolderPlus } from 'lucide-react';
+import { useParams, Link, useSearchParams } from 'react-router-dom';
+import { Clock, CheckCircle2, ArrowLeft, Play, Sparkles, FolderPlus, RefreshCw } from 'lucide-react';
 import { SectionHeading, Tile, Badge, Button, ProgressBar } from '../../../components/ui';
 import { usePath } from '../hooks';
 import { useProgress } from '../../../hooks';
 
 export const PathDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
+  const [searchParams] = useSearchParams();
+  const fromAnalyze = searchParams.get('from') === 'analyze';
+  const analyzeReason = searchParams.get('reason');
+
   const { path, loading } = usePath(id || '');
   const { enrolments, enrol, completedItems, completeLesson } = useProgress();
 
@@ -34,6 +38,25 @@ export const PathDetailPage: React.FC = () => {
         <ArrowLeft className="w-3.5 h-3.5" />
         <span>Back to All Curriculum Tracks</span>
       </Link>
+
+      {fromAnalyze && (
+        <div className="p-4 border-2 border-[#171717] bg-[var(--acid)] text-[#171717] shadow-hard flex flex-wrap items-center justify-between gap-3">
+          <div className="space-y-0.5">
+            <div className="flex items-center gap-1.5 font-mono text-[10px] uppercase font-bold text-[var(--ox)]">
+              <RefreshCw className="w-3.5 h-3.5" />
+              <span>Closed-Loop Telemetry Recommendation</span>
+            </div>
+            <h3 className="font-display font-bold text-base">Targeted Curriculum for Live Execution Gap</h3>
+            {analyzeReason && <p className="font-sans text-xs opacity-90">Reason: {analyzeReason}</p>}
+          </div>
+          {!isEnrolled && (
+            <Button variant="primary" size="sm" onClick={() => enrol(path.id)} className="bg-[#171717] text-[#F1EBDD]">
+              <FolderPlus className="w-3.5 h-3.5 mr-1.5" />
+              <span>Enrol &amp; Close Loop</span>
+            </Button>
+          )}
+        </div>
+      )}
 
       {/* Header Banner */}
       <div className="p-6 sm:p-8 border-2 border-[var(--line)] bg-[var(--card-bg)] shadow-hard space-y-6">

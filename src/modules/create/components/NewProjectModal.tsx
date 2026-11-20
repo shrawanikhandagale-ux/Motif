@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, FolderPlus } from 'lucide-react';
 import { Button, Input } from '../../../components/ui';
+import { useProgress } from '../../../hooks';
 
 interface NewProjectModalProps {
   isOpen: boolean;
@@ -9,6 +10,7 @@ interface NewProjectModalProps {
 }
 
 export const NewProjectModal: React.FC<NewProjectModalProps> = ({ isOpen, onClose, onCreate }) => {
+  const { clients } = useProgress();
   const [title, setTitle] = useState('');
   const [clientName, setClientName] = useState('');
   const [summary, setSummary] = useState('');
@@ -79,12 +81,31 @@ export const NewProjectModal: React.FC<NewProjectModalProps> = ({ isOpen, onClos
             required
           />
 
-          <Input
-            label="Client or Brand Context"
-            placeholder="e.g. Offscript Press, Self-Initiated"
-            value={clientName}
-            onChange={(e) => setClientName(e.target.value)}
-          />
+          <div className="space-y-1">
+            <label className="block text-xs font-mono font-bold uppercase tracking-wider text-[var(--ink)]">
+              Client or Brand Context
+            </label>
+            <div className="flex flex-col sm:flex-row gap-2">
+              <select
+                value={clientName}
+                onChange={(e) => setClientName(e.target.value)}
+                className="w-full sm:w-1/2 px-3 py-2 border-2 border-[var(--line)] bg-[var(--card-bg)] text-xs font-mono"
+              >
+                <option value="">Select Existing Account</option>
+                {clients.map((c) => (
+                  <option key={c.id} value={c.name}>
+                    {c.name}
+                  </option>
+                ))}
+              </select>
+              <Input
+                placeholder="Or type custom imprint"
+                value={clientName}
+                onChange={(e) => setClientName(e.target.value)}
+                className="flex-1"
+              />
+            </div>
+          </div>
 
           <Input
             label="Summary & Goal"

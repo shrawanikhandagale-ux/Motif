@@ -7,6 +7,10 @@ import {
   DeployedAssetView,
   DepartmentId,
   HandoffStatus,
+  ClientRecord,
+  CampaignRecord,
+  DeliverableRecord,
+  DeliverableStage,
 } from '../../types';
 import { MOCK_ASSETS } from '../../modules/create/services/mock/projects';
 
@@ -20,10 +24,147 @@ export interface ProgressData {
   completedChecklistIds: string[];
   assets: AssetRecord[];
   handoffs: AssetHandoffRecord[];
+  clients: ClientRecord[];
+  campaigns: CampaignRecord[];
+  deliverables: DeliverableRecord[];
 }
 
 const STORAGE_KEY = 'motif_learning_progress_store';
-const CURRENT_VERSION = 2;
+const CURRENT_VERSION = 3;
+
+const DEFAULT_CLIENTS: ClientRecord[] = [
+  {
+    id: 'cli-01',
+    name: 'Offscript Press',
+    industry: 'Independent Publishing',
+    status: 'active',
+    activeProjectsCount: 2,
+    contactEmail: 'editor@offscriptpress.org',
+    monthlyRetainer: 7500,
+    notes: 'Primary publishing partner. Bi-monthly publication releases and brand system maintenance.',
+  },
+  {
+    id: 'cli-02',
+    name: 'Kilo Apparel',
+    industry: 'Streetwear & Goods',
+    status: 'active',
+    activeProjectsCount: 1,
+    contactEmail: 'ops@kiloapparel.co',
+    monthlyRetainer: 6700,
+    notes: 'Seasonal capsule drops and screenprint asset pipelines.',
+  },
+  {
+    id: 'cli-03',
+    name: 'Sundown Records',
+    industry: 'Vinyl Imprint',
+    status: 'lead',
+    activeProjectsCount: 0,
+    contactEmail: 'a-and-r@sundownrecs.fm',
+    monthlyRetainer: 0,
+    notes: 'Prospective vinyl imprint rebrand and cassette tape packaging scope.',
+  },
+];
+
+const DEFAULT_CAMPAIGNS: CampaignRecord[] = [
+  {
+    id: 'cmp-01',
+    title: 'Issue Zero Drop Sequence',
+    channel: 'substack',
+    status: 'live',
+    dateNotice: 'Today · 18:00',
+    reach: '18.4k',
+    clientName: 'Offscript Press',
+    clientId: 'cli-01',
+    description: 'Substack manifesto announcement to 18,400 readers with 24.8% click rate.',
+    metrics: {
+      reach: '18.4k',
+      engagement: '24.8%',
+      conversion: '5.2%',
+    },
+  },
+  {
+    id: 'cmp-02',
+    title: 'Acid Merch Flash Drop',
+    channel: 'instagram',
+    status: 'planned',
+    dateNotice: 'In 2 Days',
+    reach: '24.8k',
+    clientName: 'Kilo Apparel',
+    clientId: 'cli-02',
+    description: 'Targeted Instagram carousel drop with vector separations and limited vinyl release.',
+    metrics: {
+      reach: '24.8k',
+      engagement: '19.2%',
+      conversion: '4.1%',
+    },
+  },
+  {
+    id: 'cmp-03',
+    title: 'Typography Token Specimen Thread',
+    channel: 'x',
+    status: 'draft',
+    dateNotice: 'Friday',
+    reach: '35.4k',
+    clientName: 'Offscript Press',
+    clientId: 'cli-01',
+    description: 'Deep-dive microblogging thread showcasing variable font metrics and editorial specimens.',
+    metrics: {
+      reach: '35.4k',
+      engagement: '14.5%',
+      conversion: '3.8%',
+    },
+  },
+];
+
+const DEFAULT_DELIVERABLES: DeliverableRecord[] = [
+  {
+    id: 'del-01',
+    title: 'Editorial Type Specimen Sign-off',
+    clientId: 'cli-01',
+    clientName: 'Offscript Press',
+    projectId: 'proj-01',
+    status: 'Done',
+    dueDate: '2026-11-18',
+    notes: 'Approved by lead typographer. Deployed to production CDN.',
+    createdAt: '2026-11-15T10:00:00Z',
+    updatedAt: '2026-11-18T16:30:00Z',
+  },
+  {
+    id: 'del-02',
+    title: 'Drop Campaign Content Schedule',
+    clientId: 'cli-01',
+    clientName: 'Offscript Press',
+    projectId: 'proj-01',
+    status: 'In Review',
+    dueDate: '2026-11-22',
+    notes: '14-day copy blocks submitted for editorial sign-off.',
+    createdAt: '2026-11-16T11:00:00Z',
+    updatedAt: '2026-11-19T09:15:00Z',
+  },
+  {
+    id: 'del-03',
+    title: 'Acid Halftone Separations',
+    clientId: 'cli-02',
+    clientName: 'Kilo Apparel',
+    projectId: 'proj-02',
+    status: 'Doing',
+    dueDate: '2026-11-25',
+    notes: 'Screenprint 3-color separations with 45lpi dot frequency.',
+    createdAt: '2026-11-17T14:20:00Z',
+    updatedAt: '2026-11-20T10:00:00Z',
+  },
+  {
+    id: 'del-04',
+    title: 'Contract & Retainer Scope',
+    clientId: 'cli-03',
+    clientName: 'Sundown Records',
+    status: 'Queued',
+    dueDate: '2026-12-01',
+    notes: 'Drafting initial discovery scope for winter vinyl release.',
+    createdAt: '2026-11-19T15:00:00Z',
+    updatedAt: '2026-11-19T15:00:00Z',
+  },
+];
 
 const DEFAULT_PROGRESS: ProgressData = {
   version: CURRENT_VERSION,
@@ -72,6 +213,9 @@ const DEFAULT_PROGRESS: ProgressData = {
   completedChecklistIds: ['b1-c1', 'b1-c2'],
   assets: MOCK_ASSETS,
   handoffs: [],
+  clients: DEFAULT_CLIENTS,
+  campaigns: DEFAULT_CAMPAIGNS,
+  deliverables: DEFAULT_DELIVERABLES,
 };
 
 function readStore(): ProgressData {
@@ -129,9 +273,15 @@ function readStore(): ProgressData {
       savedResourceIds: savedMerged,
       assets: Array.isArray(parsed.assets) && parsed.assets.length > 0 ? parsed.assets : DEFAULT_PROGRESS.assets,
       handoffs: Array.isArray(parsed.handoffs) ? parsed.handoffs : [],
+      clients: Array.isArray(parsed.clients) && parsed.clients.length > 0 ? parsed.clients : DEFAULT_CLIENTS,
+      campaigns: Array.isArray(parsed.campaigns) && parsed.campaigns.length > 0 ? parsed.campaigns : DEFAULT_CAMPAIGNS,
+      deliverables:
+        Array.isArray(parsed.deliverables) && parsed.deliverables.length > 0
+          ? parsed.deliverables
+          : DEFAULT_DELIVERABLES,
     };
 
-    // If migrating from v1 or unversioned, persist upgraded state
+    // If migrating from v1/v2 or unversioned, persist upgraded state
     if (parsed.version !== CURRENT_VERSION || legacySavedIds.length > 0) {
       writeStore(data);
     }
@@ -283,6 +433,7 @@ export const progressStore = {
     data.projects = data.projects.filter((p) => p.id !== projectId);
     data.assets = data.assets.filter((a) => a.projectId !== projectId);
     data.handoffs = data.handoffs.filter((h) => h.projectId !== projectId);
+    data.deliverables = data.deliverables.filter((d) => d.projectId !== projectId);
     writeStore(data);
     return data.projects.length < initialLen;
   },
@@ -518,6 +669,250 @@ export const progressStore = {
     handoff.status = status;
     writeStore(data);
     return handoff;
+  },
+
+  // ------------------- Client Records -------------------
+
+  getClients(): ClientRecord[] {
+    return readStore().clients || [];
+  },
+
+  getClient(id: string): ClientRecord | null {
+    return (readStore().clients || []).find((c) => c.id === id) || null;
+  },
+
+  createClient(props: Partial<ClientRecord> & { name: string; contactEmail: string }): ClientRecord {
+    const data = readStore();
+    const newClient: ClientRecord = {
+      id: props.id || `cli-${Date.now()}`,
+      name: props.name.trim(),
+      industry: props.industry?.trim() || 'Creative Studio',
+      status: props.status || 'active',
+      activeProjectsCount: props.activeProjectsCount ?? 0,
+      contactEmail: props.contactEmail.trim(),
+      monthlyRetainer: props.monthlyRetainer ?? 0,
+      notes: props.notes?.trim() || '',
+    };
+    data.clients.push(newClient);
+    writeStore(data);
+    return newClient;
+  },
+
+  updateClient(id: string, props: Partial<ClientRecord>): ClientRecord | null {
+    const data = readStore();
+    const idx = data.clients.findIndex((c) => c.id === id);
+    if (idx < 0) return null;
+    data.clients[idx] = { ...data.clients[idx], ...props };
+    writeStore(data);
+    return data.clients[idx];
+  },
+
+  deleteClient(id: string): boolean {
+    const data = readStore();
+    const initLen = data.clients.length;
+    data.clients = data.clients.filter((c) => c.id !== id);
+    writeStore(data);
+    return data.clients.length < initLen;
+  },
+
+  // ------------------- Deliverable Records -------------------
+
+  getDeliverables(clientId?: string): DeliverableRecord[] {
+    const list = readStore().deliverables || [];
+    if (!clientId) return list;
+    return list.filter((d) => d.clientId === clientId);
+  },
+
+  getDeliverable(id: string): DeliverableRecord | null {
+    return (readStore().deliverables || []).find((d) => d.id === id) || null;
+  },
+
+  createDeliverable(props: Partial<DeliverableRecord> & { title: string; clientName: string }): DeliverableRecord {
+    const data = readStore();
+    const client = data.clients.find(
+      (c) => c.id === props.clientId || c.name.toLowerCase() === props.clientName.toLowerCase()
+    );
+    const clientId = client?.id || props.clientId || `cli-${Date.now()}`;
+    const clientName = client?.name || props.clientName;
+
+    const newDeliverable: DeliverableRecord = {
+      id: props.id || `del-${Date.now()}`,
+      title: props.title.trim(),
+      clientId,
+      clientName,
+      projectId: props.projectId,
+      assetId: props.assetId,
+      status: props.status || 'Queued',
+      dueDate: props.dueDate || '2026-12-01',
+      notes: props.notes || '',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+
+    data.deliverables.push(newDeliverable);
+
+    // Sync client active deliverable count
+    if (client) {
+      client.activeProjectsCount = data.deliverables.filter(
+        (d) => d.clientId === client.id && d.status !== 'Done'
+      ).length;
+    }
+
+    writeStore(data);
+    return newDeliverable;
+  },
+
+  updateDeliverableStage(id: string, stage: DeliverableStage): DeliverableRecord | null {
+    const data = readStore();
+    const deliv = data.deliverables.find((d) => d.id === id);
+    if (!deliv) return null;
+    deliv.status = stage;
+    deliv.updatedAt = new Date().toISOString();
+
+    // Recompute client active counts
+    const client = data.clients.find((c) => c.id === deliv.clientId);
+    if (client) {
+      client.activeProjectsCount = data.deliverables.filter(
+        (d) => d.clientId === client.id && d.status !== 'Done'
+      ).length;
+    }
+
+    writeStore(data);
+    return deliv;
+  },
+
+  updateDeliverable(id: string, props: Partial<DeliverableRecord>): DeliverableRecord | null {
+    const data = readStore();
+    const idx = data.deliverables.findIndex((d) => d.id === id);
+    if (idx < 0) return null;
+    data.deliverables[idx] = {
+      ...data.deliverables[idx],
+      ...props,
+      updatedAt: new Date().toISOString(),
+    };
+    writeStore(data);
+    return data.deliverables[idx];
+  },
+
+  deleteDeliverable(id: string): boolean {
+    const data = readStore();
+    const initLen = data.deliverables.length;
+    data.deliverables = data.deliverables.filter((d) => d.id !== id);
+    writeStore(data);
+    return data.deliverables.length < initLen;
+  },
+
+  // ------------------- Campaign Records -------------------
+
+  getCampaigns(clientId?: string): CampaignRecord[] {
+    const list = readStore().campaigns || [];
+    if (!clientId) return list;
+    return list.filter((c) => c.clientId === clientId);
+  },
+
+  getCampaign(id: string): CampaignRecord | null {
+    return (readStore().campaigns || []).find((c) => c.id === id) || null;
+  },
+
+  createCampaign(props: Partial<CampaignRecord> & { title: string }): CampaignRecord {
+    const data = readStore();
+    const newCamp: CampaignRecord = {
+      id: props.id || `cmp-${Date.now()}`,
+      title: props.title.trim(),
+      channel: props.channel || 'substack',
+      status: props.status || 'draft',
+      dateNotice: props.dateNotice || 'Scheduled',
+      reach: props.reach || '10.0k',
+      clientId: props.clientId,
+      clientName: props.clientName,
+      assetIds: props.assetIds || [],
+      description: props.description || 'Targeted multi-channel broadcast campaign.',
+      metrics: props.metrics || {
+        reach: props.reach || '10.0k',
+        engagement: '18.0%',
+        conversion: '3.5%',
+      },
+    };
+    data.campaigns.unshift(newCamp);
+    writeStore(data);
+    return newCamp;
+  },
+
+  updateCampaign(id: string, props: Partial<CampaignRecord>): CampaignRecord | null {
+    const data = readStore();
+    const idx = data.campaigns.findIndex((c) => c.id === id);
+    if (idx < 0) return null;
+    data.campaigns[idx] = { ...data.campaigns[idx], ...props };
+    writeStore(data);
+    return data.campaigns[idx];
+  },
+
+  updateCampaignStatus(id: string, status: CampaignRecord['status']): CampaignRecord | null {
+    const data = readStore();
+    const camp = data.campaigns.find((c) => c.id === id);
+    if (!camp) return null;
+    camp.status = status;
+    writeStore(data);
+    return camp;
+  },
+
+  attachAssetToCampaign(campaignId: string, assetId: string): boolean {
+    const data = readStore();
+    const camp = data.campaigns.find((c) => c.id === campaignId);
+    const asset = data.assets.find((a) => a.id === assetId);
+    if (!camp || !asset) return false;
+
+    if (!camp.assetIds) camp.assetIds = [];
+    if (!camp.assetIds.includes(assetId)) {
+      camp.assetIds.push(assetId);
+    }
+    asset.campaignId = campaignId;
+
+    // Also update any matching handoffs
+    const handoff = data.handoffs.find((h) => h.assetId === assetId && h.toDepartment === 'market');
+    if (handoff) {
+      handoff.status = 'assigned';
+      handoff.campaignId = campaignId;
+    }
+
+    writeStore(data);
+    return true;
+  },
+
+  attachCampaignToClient(campaignId: string, clientId: string, clientName: string): boolean {
+    const data = readStore();
+    const camp = data.campaigns.find((c) => c.id === campaignId);
+    if (!camp) return false;
+    camp.clientId = clientId;
+    camp.clientName = clientName;
+
+    // Create a corresponding deliverable in Manage if one does not already exist
+    const exists = data.deliverables.some(
+      (d) => d.clientId === clientId && d.title.includes(camp.title)
+    );
+    if (!exists) {
+      data.deliverables.push({
+        id: `del-${Date.now()}`,
+        title: `${camp.title} Execution`,
+        clientId,
+        clientName,
+        status: 'Doing',
+        dueDate: '2026-11-30',
+        notes: `Attached from Market distribution campaign (${camp.channel}).`,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      });
+
+      const client = data.clients.find((c) => c.id === clientId);
+      if (client) {
+        client.activeProjectsCount = data.deliverables.filter(
+          (d) => d.clientId === client.id && d.status !== 'Done'
+        ).length;
+      }
+    }
+
+    writeStore(data);
+    return true;
   },
 };
 
