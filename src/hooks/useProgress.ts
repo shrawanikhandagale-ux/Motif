@@ -12,6 +12,9 @@ import {
   CampaignRecord,
   DeliverableRecord,
   DeliverableStage,
+  ContentPostRecord,
+  ConnectionRecord,
+  ConnectionStatus,
 } from '../types';
 import { progressStore } from '../services/storage';
 
@@ -27,6 +30,8 @@ export function useProgress() {
   const [clients, setClients] = useState<ClientRecord[]>(() => progressStore.getClients());
   const [campaigns, setCampaigns] = useState<CampaignRecord[]>(() => progressStore.getCampaigns());
   const [deliverables, setDeliverables] = useState<DeliverableRecord[]>(() => progressStore.getDeliverables());
+  const [posts, setPosts] = useState<ContentPostRecord[]>(() => progressStore.getPosts());
+  const [connections, setConnections] = useState<ConnectionRecord[]>(() => progressStore.getConnections());
 
   const sync = useCallback(() => {
     const data = progressStore.get();
@@ -41,6 +46,8 @@ export function useProgress() {
     setClients(data.clients || []);
     setCampaigns(data.campaigns || []);
     setDeliverables(data.deliverables || []);
+    setPosts(data.posts || []);
+    setConnections(data.connections || []);
   }, []);
 
   useEffect(() => {
@@ -64,6 +71,11 @@ export function useProgress() {
     if (skillIdToUnlock) {
       progressStore.unlockSkills([skillIdToUnlock]);
     }
+    sync();
+  }, [sync]);
+
+  const uncompleteLesson = useCallback((lessonId: string) => {
+    progressStore.unmarkCompleted(lessonId);
     sync();
   }, [sync]);
 
@@ -326,6 +338,42 @@ export function useProgress() {
     [sync]
   );
 
+  const createPost = useCallback(
+    (props: Omit<ContentPostRecord, 'id'> & { id?: string }) => {
+      const p = progressStore.createPost(props);
+      sync();
+      return p;
+    },
+    [sync]
+  );
+
+  const updatePost = useCallback(
+    (id: string, updates: Partial<ContentPostRecord>) => {
+      const p = progressStore.updatePost(id, updates);
+      sync();
+      return p;
+    },
+    [sync]
+  );
+
+  const deletePost = useCallback(
+    (id: string) => {
+      const ok = progressStore.deletePost(id);
+      sync();
+      return ok;
+    },
+    [sync]
+  );
+
+  const updateConnectionStatus = useCallback(
+    (id: string, status: ConnectionStatus) => {
+      const c = progressStore.updateConnectionStatus(id, status);
+      sync();
+      return c;
+    },
+    [sync]
+  );
+
   return {
     enrolments,
     completedItems,
@@ -338,8 +386,11 @@ export function useProgress() {
     clients,
     campaigns,
     deliverables,
+    posts,
+    connections,
     enrol,
     completeLesson,
+    uncompleteLesson,
     completeBrief,
     unlockSkills,
     isCompleted,
@@ -377,6 +428,10 @@ export function useProgress() {
     updateCampaignStatus,
     attachAssetToCampaign,
     attachCampaignToClient,
+    createPost,
+    updatePost,
+    deletePost,
+    updateConnectionStatus,
     refresh: sync,
   };
 }

@@ -1,62 +1,52 @@
 import React from 'react';
-import { SectionHeading, Sticker } from '../../../components/ui';
 import { HandoffNotice } from '../../../components/shared/HandoffNotice';
 import {
   LearnSubNav,
   ContinueLearningCard,
   SuggestedNextStep,
-  SkillMapCompactPreview,
+  SkillProgressList,
+  RecentlyAddedList,
 } from '../components';
 
 export const LearnPage: React.FC = () => {
   return (
-    <div className="space-y-8 max-w-7xl mx-auto">
-      <SectionHeading
-        as="h1"
-        kicker="Department 01 · The Academy · Volume I"
-        title="LEARN:"
-        skewWord="the academy"
-        description="Learn by making with guided curriculum tracks, real briefs with firm deadlines, and an evolving Skill Map that illuminates as you ship."
-        borderBottom
-        action={
-          <Sticker variant="acid" rotation="cw">
-            Department 01
-          </Sticker>
-        }
-      />
-
-      <LearnSubNav />
-
-      {/* Academy Dispatch Manifesto Strip */}
-      <div className="p-3 border-2 border-[var(--line)] bg-[var(--card-bg)] shadow-hard-sm flex flex-wrap items-center justify-between gap-3 text-xs font-mono">
-        <div className="flex items-center gap-2">
-          <span className="w-2.5 h-2.5 bg-[var(--ox)] border border-[var(--line)]" />
-          <span className="font-bold text-[var(--ink)] uppercase">Academy Rule 01:</span>
-          <span className="opacity-80">Do not study theory you cannot immediately execute. Every track produces tangible work.</span>
+    <div className="space-y-6 max-w-7xl mx-auto">
+      {/* Editorial Department Header */}
+      <div className="flex flex-wrap items-baseline justify-between gap-4 pb-4 border-b-2 border-[var(--line)]">
+        <div>
+          <div className="flex items-center gap-2 font-mono text-xs uppercase font-bold tracking-wider opacity-70 mb-1">
+            <span className="w-2.5 h-2.5 bg-[var(--acid)] border border-[var(--line)]" />
+            <span>Department 01 · The Academy</span>
+          </div>
+          <h1 className="font-display font-black text-3xl sm:text-5xl text-[var(--ink)] tracking-tight">
+            LEARN <span className="text-[var(--ox)] font-normal italic font-serif">the desk</span>
+          </h1>
         </div>
-        <span className="opacity-60 text-[10px] hidden sm:inline">OFFSCRIPT ED. 2026</span>
+        <div className="font-mono text-xs opacity-75 hidden sm:block text-right">
+          <div>Learn by making. Ship into Create.</div>
+          <div className="font-bold text-[var(--ink)]">OFFSCRIPT CURRICULUM</div>
+        </div>
       </div>
 
+      {/* Segmented Connected Tabs (Desk | Courses | Skill Map | Vault) */}
+      <LearnSubNav />
+
+      {/* Wide Continue Learning Feature Card */}
+      <ContinueLearningCard />
+
+      {/* 3-Column Balanced Desk Row */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-stretch">
+        <SkillProgressList />
+        <SuggestedNextStep />
+        <RecentlyAddedList />
+      </div>
+
+      {/* Cross-Department Handoff Notice */}
       <HandoffNotice
         toDeptName="Create"
         toDeptPath="/create"
-        text="Starting any brief in Learn immediately initializes as an active studio project in Create with shared assets."
+        text="Executing any brief in Learn immediately initializes as an active studio project in Create with persistent assets."
       />
-
-      {/* Primary 3-Section Editorial Layout */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-stretch">
-        <div className="lg:col-span-2 flex flex-col">
-          <ContinueLearningCard />
-        </div>
-        <div className="flex flex-col">
-          <SuggestedNextStep />
-        </div>
-      </div>
-
-      {/* Skill Map Preview Strip */}
-      <div className="w-full">
-        <SkillMapCompactPreview />
-      </div>
     </div>
   );
 };

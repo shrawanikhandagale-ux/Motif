@@ -1,8 +1,8 @@
 import React from 'react';
 import { SectionHeading, Button, Sticker } from '../../../components/ui';
 import { HandoffNotice } from '../../../components/shared/HandoffNotice';
-import { ClientRosterTable, DeliverablesBoard } from '../components';
-import { Briefcase, DollarSign, Clock, BarChart2, ShieldCheck } from 'lucide-react';
+import { ManageSubNav, DeliverablesBoard } from '../components';
+import { Briefcase, DollarSign, Clock, BarChart2, ShieldCheck, ArrowRight, Building2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useProgress } from '../../../hooks';
 
@@ -29,11 +29,13 @@ export const ManagePage: React.FC = () => {
         description="Run the work with systematic client rosters, deliverable tracking boards, retainer scopes, and operational control."
         borderBottom
         action={
-          <Sticker variant="acid" rotation="cw">
+          <Sticker variant="ivory" rotation="cw" className="!bg-[#171717] !text-[#F1EBDD] !border-[#F1EBDD]">
             Department 04
           </Sticker>
         }
       />
+
+      <ManageSubNav />
 
       {/* Operations Telemetry Strip */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
@@ -80,13 +82,51 @@ export const ManagePage: React.FC = () => {
         text="Live client campaigns and completed scopes stream directly into Analyze & Grow metrics."
       />
 
-      {/* 01. Client Roster Table */}
-      <ClientRosterTable />
-
-      {/* 02. Deliverables Board */}
+      {/* Primary Workflow Deliverables Board */}
       <DeliverablesBoard />
 
-      {/* 03. Business Ledger & Retainer Scopes Strip */}
+      {/* Quick Navigation Cards for Manage Sub-domains */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t-2 border-[var(--line)]">
+        <div className="p-5 border-2 border-[var(--line)] bg-[var(--card-bg)] shadow-hard flex flex-col justify-between space-y-3">
+          <div className="space-y-1.5">
+            <div className="flex items-center gap-2">
+              <Building2 className="w-4 h-4 text-[var(--ox)]" />
+              <span className="font-mono text-xs uppercase font-bold text-[var(--ox)]">Client Imprints</span>
+            </div>
+            <h3 className="font-display font-bold text-lg text-[var(--ink)]">Client Roster &amp; Scopes</h3>
+            <p className="font-sans text-xs opacity-80 leading-relaxed">
+              Maintain accounts, direct email contacts, industry designations, and formal scope agreements for each partner.
+            </p>
+          </div>
+          <Link to="/manage/clients" className="inline-block pt-2">
+            <Button variant="secondary" size="sm">
+              <span>Open Client Directory</span>
+              <ArrowRight className="w-3.5 h-3.5 ml-1.5" />
+            </Button>
+          </Link>
+        </div>
+
+        <div className="p-5 border-2 border-[var(--line)] bg-[var(--card-bg)] shadow-hard flex flex-col justify-between space-y-3">
+          <div className="space-y-1.5">
+            <div className="flex items-center gap-2">
+              <DollarSign className="w-4 h-4 text-[var(--ox)]" />
+              <span className="font-mono text-xs uppercase font-bold text-[var(--ox)]">Financial Telemetry</span>
+            </div>
+            <h3 className="font-display font-bold text-lg text-[var(--ink)]">Finance &amp; Retainer Ledger</h3>
+            <p className="font-sans text-xs opacity-80 leading-relaxed">
+              Review monthly recurring retainers, billing schedules, and contracted run-rates without fabricated gateway mocks.
+            </p>
+          </div>
+          <Link to="/manage/finance" className="inline-block pt-2">
+            <Button variant="secondary" size="sm">
+              <span>View Financial Ledger</span>
+              <ArrowRight className="w-3.5 h-3.5 ml-1.5" />
+            </Button>
+          </Link>
+        </div>
+      </div>
+
+      {/* Operational Closed-Loop Banner */}
       <div className="p-6 border-2 border-[var(--line)] bg-[var(--card-bg)] shadow-hard flex flex-wrap items-center justify-between gap-4">
         <div className="space-y-1 max-w-xl">
           <span className="font-mono text-xs uppercase font-bold text-[var(--ox)]">Operational Closed-Loop</span>

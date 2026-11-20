@@ -1,54 +1,68 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Sparkles, ArrowRight, Zap } from 'lucide-react';
-import { Tile, Badge, Button } from '../../../components/ui';
+import { ArrowRight, Sparkles, Zap } from 'lucide-react';
+import { useProgress } from '../../../hooks';
+import { MOCK_BRIEFS } from '../services/mock/mockBriefs';
 
 export const SuggestedNextStep: React.FC = () => {
+  const { projects } = useProgress();
+  const brief = MOCK_BRIEFS[0];
+
+  // Check if a project already spawned from this brief
+  const hasProject = projects.some((p) => p.briefId === brief.id);
+
   return (
-    <Tile accent="acid" shadow="ox" className="p-6 sm:p-8 flex flex-col justify-between space-y-6 relative overflow-hidden">
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-1.5 font-mono text-xs font-bold text-[#171717] uppercase tracking-wider">
-            <Zap className="w-3.5 h-3.5 text-[var(--ox)]" />
-            <span>Priority Studio Brief</span>
+    <div className="border-2 border-[var(--line)] bg-[var(--elec)] text-[#171717] p-5 flex flex-col justify-between shadow-hard-sm">
+      <div>
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-1.5 font-mono text-xs font-bold uppercase tracking-wider">
+            <Zap className="w-3.5 h-3.5 fill-current" />
+            <span>Upcoming practical brief</span>
           </div>
-          <span className="font-mono text-[10px] uppercase font-bold px-1.5 py-0.5 bg-[#171717] text-[#D9E638]">
-            Urgent Dispatch
+          <span className="font-mono text-[10px] px-1.5 py-0.5 border border-[#171717] bg-[#171717] text-[#FAF7EE] font-bold">
+            {brief.deadlineNotice || 'Priority'}
           </span>
         </div>
 
-        <div>
-          <h3 className="font-display font-extrabold text-2xl text-[#171717] leading-tight">
-            Draft the Brand Manifesto for Offscript Press
-          </h3>
-          <p className="text-xs sm:text-sm text-[#171717] opacity-90 mt-2 leading-relaxed font-sans">
-            Real prompt with firm constraints. Write a 3-part positioning statement and design an accompanying typography specimen.
-          </p>
-        </div>
+        <h3 className="font-display font-extrabold text-xl text-[#171717] tracking-tight leading-snug mb-2">
+          {brief.title}
+        </h3>
 
-        <div className="flex flex-wrap gap-2 pt-1 font-mono text-xs">
-          <Badge variant="default" className="bg-[#171717] text-[#F1EBDD] border-0 text-[10px] uppercase">
-            Unlocks 3 Skills
-          </Badge>
-          <Badge variant="default" className="bg-[#171717] text-[#F1EBDD] border-0 text-[10px] uppercase">
-            Spawns Project
-          </Badge>
+        <p className="text-xs font-sans text-[#171717]/85 leading-relaxed mb-4">
+          {brief.description}
+        </p>
+
+        <div className="p-2.5 border border-[#171717]/40 bg-[#171717]/5 text-xs font-mono space-y-1">
+          <div className="flex items-center justify-between">
+            <span className="opacity-75">Context:</span>
+            <span className="font-bold truncate max-w-[180px]">{brief.clientOrContext}</span>
+          </div>
+          <div className="flex items-center justify-between">
+            <span className="opacity-75">Deliverables:</span>
+            <span className="font-bold">{brief.checklist.length} checklist items</span>
+          </div>
+          <div className="flex items-center justify-between">
+            <span className="opacity-75">Unlocks:</span>
+            <span className="font-bold">{brief.skillsUnlocked.length} skill nodes</span>
+          </div>
         </div>
       </div>
 
-      <div className="pt-4 border-t-2 border-[#171717] flex items-center justify-between">
-        <div className="flex items-center gap-1 font-mono text-xs text-[#171717] font-bold">
-          <Sparkles className="w-3.5 h-3.5 text-[var(--ox)]" />
-          <span>Est. 45 min</span>
+      <div className="pt-4 mt-4 border-t-2 border-[#171717] flex items-center justify-between">
+        <div className="flex items-center gap-1 font-mono text-[11px] text-[#171717]/80">
+          <Sparkles className="w-3 h-3 text-[var(--ox)]" />
+          <span>Handoff to Create</span>
         </div>
-        <Link to="/learn/briefs/brief-01">
-          <Button variant="primary" size="sm" className="bg-[#171717] text-[#F1EBDD] hover:bg-[#171717]/90 text-xs shadow-hard-sm">
-            <span>Execute Brief</span>
-            <ArrowRight className="w-3.5 h-3.5 ml-1.5" />
-          </Button>
+
+        <Link
+          to={`/learn/briefs/${brief.id}`}
+          className="inline-flex items-center gap-1.5 px-3.5 py-1.5 border-2 border-[#171717] bg-[#171717] text-[#FAF7EE] font-display font-bold text-xs hover:bg-[#171717]/90 transition-colors shadow-hard-sm"
+        >
+          <span>{hasProject ? 'View Brief' : 'Open Brief'}</span>
+          <ArrowRight className="w-3.5 h-3.5" />
         </Link>
       </div>
-    </Tile>
+    </div>
   );
 };
 

@@ -11,6 +11,9 @@ import {
   CampaignRecord,
   DeliverableRecord,
   DeliverableStage,
+  ContentPostRecord,
+  ConnectionRecord,
+  ConnectionStatus,
 } from '../../types';
 import { MOCK_ASSETS } from '../../modules/create/services/mock/projects';
 
@@ -27,6 +30,8 @@ export interface ProgressData {
   clients: ClientRecord[];
   campaigns: CampaignRecord[];
   deliverables: DeliverableRecord[];
+  posts: ContentPostRecord[];
+  connections: ConnectionRecord[];
 }
 
 const STORAGE_KEY = 'motif_learning_progress_store';
@@ -166,6 +171,24 @@ const DEFAULT_DELIVERABLES: DeliverableRecord[] = [
   },
 ];
 
+const DEFAULT_POSTS: ContentPostRecord[] = [
+  { id: 'post-1', title: 'Brand story reel', channel: 'Instagram', scheduledDate: '2026-11-12', status: 'published', caption: 'Behind the process of the Offscript typography specimens.', campaignTitle: 'Salt & Ember launch' },
+  { id: 'post-2', title: 'Moodboard pin drop', channel: 'Pinterest', scheduledDate: '2026-11-18', status: 'published', caption: 'Tactile paper stocks and industrial halftone textures.', campaignTitle: 'Salt & Ember launch' },
+  { id: 'post-3', title: 'Teaser carousel sequence', channel: 'Instagram', scheduledDate: '2026-11-24', status: 'scheduled', caption: 'Something is coming. ✱ First look at the risograph zine plates.', campaignTitle: 'Zine pre-order push' },
+  { id: 'post-4', title: 'Zine preview dispatch', channel: 'Newsletter', scheduledDate: '2026-11-26', status: 'in_review', caption: 'Early subscriber look into the 16-page risograph run.', campaignTitle: 'Zine pre-order push' },
+  { id: 'post-5', title: 'Launch day announcement', channel: 'Instagram', scheduledDate: '2026-11-30', status: 'idea', caption: 'The drop is live. Limited batch run of 200 copies.' },
+  { id: 'post-6', title: 'Behind the scenes printing litho', channel: 'YouTube', scheduledDate: '2026-12-03', status: 'idea', caption: 'Screenprinting vector separations at the studio.' },
+];
+
+const DEFAULT_CONNECTIONS: ConnectionRecord[] = [
+  { id: 'conn-1', channel: 'Instagram', name: 'Instagram', status: 'demo_handoff_ready', handleOrUrl: '@motif.studio', notes: 'Handoff ready for carousel and reel export assets.' },
+  { id: 'conn-2', channel: 'Pinterest', name: 'Pinterest', status: 'demo_handoff_ready', handleOrUrl: 'pinterest.com/motif_curated', notes: 'Asset handoff ready for high-resolution moodboard pins.' },
+  { id: 'conn-3', channel: 'Newsletter', name: 'Substack / Newsletter', status: 'connected', handleOrUrl: 'motif.substack.com', notes: 'Verified RSS / direct publication dispatch channel.' },
+  { id: 'conn-4', channel: 'LinkedIn', name: 'LinkedIn Company', status: 'disconnected', handleOrUrl: 'linkedin.com/company/motif-os', notes: 'No active session. Reconnect required.' },
+  { id: 'conn-5', channel: 'YouTube', name: 'YouTube Channel', status: 'unavailable', handleOrUrl: 'youtube.com/@motif', notes: 'Video publishing requires authenticated Google Cloud API quota.' },
+  { id: 'conn-6', channel: 'Website', name: 'Direct Website Webhook', status: 'disconnected', handleOrUrl: 'https://motif.build/webhooks/market', notes: 'Webhook endpoint awaiting SSL handshake.' },
+];
+
 const DEFAULT_PROGRESS: ProgressData = {
   version: CURRENT_VERSION,
   enrolments: [
@@ -216,6 +239,8 @@ const DEFAULT_PROGRESS: ProgressData = {
   clients: DEFAULT_CLIENTS,
   campaigns: DEFAULT_CAMPAIGNS,
   deliverables: DEFAULT_DELIVERABLES,
+  posts: DEFAULT_POSTS,
+  connections: DEFAULT_CONNECTIONS,
 };
 
 function readStore(): ProgressData {
@@ -279,6 +304,14 @@ function readStore(): ProgressData {
         Array.isArray(parsed.deliverables) && parsed.deliverables.length > 0
           ? parsed.deliverables
           : DEFAULT_DELIVERABLES,
+      posts:
+        Array.isArray(parsed.posts) && parsed.posts.length > 0
+          ? parsed.posts
+          : DEFAULT_POSTS,
+      connections:
+        Array.isArray(parsed.connections) && parsed.connections.length > 0
+          ? parsed.connections
+          : DEFAULT_CONNECTIONS,
     };
 
     // If migrating from v1/v2 or unversioned, persist upgraded state
@@ -337,6 +370,17 @@ export const progressStore = {
     data.completedItems.push(newItem);
     writeStore(data);
     return newItem;
+  },
+
+  unmarkCompleted(targetId: string): boolean {
+    const data = readStore();
+    const initialLen = data.completedItems.length;
+    data.completedItems = data.completedItems.filter((c) => c.targetId !== targetId && c.id !== targetId);
+    if (data.completedItems.length !== initialLen) {
+      writeStore(data);
+      return true;
+    }
+    return false;
   },
 
   isCompleted(targetId: string): boolean {
@@ -913,6 +957,82 @@ export const progressStore = {
 
     writeStore(data);
     return true;
+  },
+
+  // --- CONTENT PLANNER METHODS (motif-v2.html:112 fidelity) ---
+  getPosts(): ContentPostRecord[] {
+    return readStore().posts || [];
+  },
+
+  getPost(id: string): ContentPostRecord | null {
+    return readStore().posts.find((p) => p.id === id) || null;
+  },
+
+  createPost(props: Omit<ContentPostRecord, 'id'> & { id?: string }): ContentPostRecord {
+    const data = readStore();
+    const newPost: ContentPostRecord = {
+      id: props.id || `post-${Date.now()}`,
+      title: props.title,
+      channel: props.channel,
+      scheduledDate: props.scheduledDate || '2026-11-20',
+      status: props.status || 'idea',
+      caption: props.caption || '',
+      campaignId: props.campaignId,
+      campaignTitle: props.campaignTitle,
+      projectId: props.projectId,
+      projectTitle: props.projectTitle,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+    data.posts.push(newPost);
+    writeStore(data);
+    return newPost;
+  },
+
+  updatePost(id: string, updates: Partial<ContentPostRecord>): ContentPostRecord | null {
+    const data = readStore();
+    const idx = data.posts.findIndex((p) => p.id === id);
+    if (idx === -1) return null;
+    data.posts[idx] = {
+      ...data.posts[idx],
+      ...updates,
+      updatedAt: new Date().toISOString(),
+    };
+    writeStore(data);
+    return data.posts[idx];
+  },
+
+  deletePost(id: string): boolean {
+    const data = readStore();
+    const initialLen = data.posts.length;
+    data.posts = data.posts.filter((p) => p.id !== id);
+    if (data.posts.length !== initialLen) {
+      writeStore(data);
+      return true;
+    }
+    return false;
+  },
+
+  // --- CONNECTIONS METHODS (motif-v2.html:119 fidelity) ---
+  getConnections(): ConnectionRecord[] {
+    return readStore().connections || [];
+  },
+
+  getConnection(id: string): ConnectionRecord | null {
+    return readStore().connections.find((c) => c.id === id) || null;
+  },
+
+  updateConnectionStatus(id: string, status: ConnectionStatus): ConnectionRecord | null {
+    const data = readStore();
+    const idx = data.connections.findIndex((c) => c.id === id);
+    if (idx === -1) return null;
+    data.connections[idx] = {
+      ...data.connections[idx],
+      status,
+      lastHandoffAt: status === 'demo_handoff_ready' || status === 'connected' ? new Date().toISOString() : data.connections[idx].lastHandoffAt,
+    };
+    writeStore(data);
+    return data.connections[idx];
   },
 };
 

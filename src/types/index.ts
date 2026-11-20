@@ -174,6 +174,36 @@ export interface CampaignRecord {
   };
 }
 
+export type PostStatus = 'idea' | 'in_review' | 'scheduled' | 'published';
+export type ChannelType = 'Instagram' | 'Pinterest' | 'LinkedIn' | 'YouTube' | 'Newsletter' | 'Website';
+
+export interface ContentPostRecord {
+  id: string;
+  title: string;
+  channel: ChannelType;
+  scheduledDate: string; // YYYY-MM-DD
+  status: PostStatus;
+  caption?: string;
+  campaignId?: string;
+  campaignTitle?: string;
+  projectId?: string;
+  projectTitle?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export type ConnectionStatus = 'connected' | 'disconnected' | 'demo_handoff_ready' | 'unavailable';
+
+export interface ConnectionRecord {
+  id: string;
+  channel: ChannelType;
+  name: string;
+  status: ConnectionStatus;
+  handleOrUrl?: string;
+  notes?: string;
+  lastHandoffAt?: string;
+}
+
 export interface CoursePath {
   id: string;
   title: string;

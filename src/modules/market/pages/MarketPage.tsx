@@ -1,171 +1,183 @@
-import React, { useState } from 'react';
-import { SectionHeading, Tile, Button, Sticker, Badge } from '../../../components/ui';
+import React, { useState, useMemo } from 'react';
+import { Search, Plus, Sparkles, Filter, Store } from 'lucide-react';
 import { HandoffNotice } from '../../../components/shared/HandoffNotice';
-import { IncomingAssetsTray } from '../components/IncomingAssetsTray';
-import { NewCampaignModal } from '../components/NewCampaignModal';
-import { AttachToClientModal } from '../components/AttachToClientModal';
-import { Share2, Radio, Send, Calendar, Megaphone, Plus } from 'lucide-react';
-import { useProgress } from '../../../hooks';
-import { CampaignRecord } from '../../../types';
+import {
+  MarketSubNav,
+  ListingCard,
+  ListingDetailModal,
+  NewListingModal,
+} from '../components';
+import { marketService } from '../services/marketService';
+import { MarketListing, MarketCategory } from '../types';
+
+const CATEGORIES: Array<{ id: MarketCategory; label: string }> = [
+  { id: 'all', label: 'All Offerings' },
+  { id: 'zines', label: 'Zines & Print' },
+  { id: 'fonts', label: 'Type Specimens' },
+  { id: 'templates', label: 'Templates & Kits' },
+  { id: 'services', label: 'Creative Retainers' },
+  { id: 'graphics', label: 'Graphic Packs' },
+];
 
 export const MarketPage: React.FC = () => {
-  const { campaigns, clients, createCampaign, updateCampaignStatus, attachCampaignToClient } = useProgress();
+  const [listings, setListings] = useState<MarketListing[]>(() => marketService.getListings());
+  const [selectedCategory, setSelectedCategory] = useState<MarketCategory>('all');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [inspectedListing, setInspectedListing] = useState<MarketListing | null>(null);
   const [newModalOpen, setNewModalOpen] = useState(false);
-  const [attachCampaign, setAttachCampaign] = useState<CampaignRecord | null>(null);
 
-  const activeCount = campaigns.filter((c) => c.status === 'live').length;
+  const filteredListings = useMemo(() => {
+    return listings.filter((l) => {
+      if (selectedCategory !== 'all' && l.category !== selectedCategory) return false;
+      if (searchQuery.trim()) {
+        const q = searchQuery.toLowerCase();
+        return (
+          l.title.toLowerCase().includes(q) ||
+          l.creatorName.toLowerCase().includes(q) ||
+          l.creatorHandle.toLowerCase().includes(q) ||
+          l.description.toLowerCase().includes(q) ||
+          l.tags.some((t) => t.toLowerCase().includes(q))
+        );
+      }
+      return true;
+    });
+  }, [listings, selectedCategory, searchQuery]);
 
-  const cycleStatus = (id: string, current: CampaignRecord['status']) => {
-    const sequence: CampaignRecord['status'][] = ['draft', 'planned', 'live', 'completed'];
-    const nextIdx = (sequence.indexOf(current) + 1) % sequence.length;
-    updateCampaignStatus(id, sequence[nextIdx]);
+  const handlePublish = (data: Omit<MarketListing, 'id'>) => {
+    const created = marketService.createListing(data);
+    setListings((prev) => [created, ...prev]);
   };
 
   return (
-    <div className="space-y-8 max-w-7xl mx-auto">
-      <SectionHeading
-        as="h1"
-        kicker="Department 03 · The Hub · Multi-Channel Distribution"
-        title="MARKET:"
-        skewWord="the hub"
-        description="Put it out there with multi-channel campaigns, release drop sequences, audience telemetry, and brand positioning worksheets."
-        borderBottom
-        action={<Sticker variant="acid" rotation="cw">Department 03</Sticker>}
-      />
+    <div className="space-y-6 max-w-7xl mx-auto">
+      {/* Editorial Header */}
+      <div className="flex flex-wrap items-baseline justify-between gap-4 pb-4 border-b-2 border-[var(--line)]">
+        <div>
+          <div className="flex items-center gap-2 font-mono text-xs uppercase font-bold tracking-wider opacity-70 mb-1">
+            <span className="w-2.5 h-2.5 bg-[var(--elec)] border border-[var(--line)]" />
+            <span>Department 03 · The Hub · Creative Marketplace &amp; Discovery</span>
+          </div>
+          <h1 className="font-display font-black text-3xl sm:text-5xl text-[var(--ink)] tracking-tight">
+            MARKET <span className="text-[var(--ox)] font-normal italic font-serif">the hub</span>
+          </h1>
+        </div>
+        <div className="font-mono text-xs opacity-75 hidden sm:block text-right">
+          <div>{listings.length} Curated Creative Offerings</div>
+          <div className="font-bold text-[var(--ink)]">OFFSCRIPT COMMERCE</div>
+        </div>
+      </div>
 
+      <MarketSubNav />
+
+      {/* Telemetry Strip */}
       <div className="p-3 border-2 border-[var(--line)] bg-[var(--card-bg)] shadow-hard-sm flex flex-wrap items-center justify-between gap-3 text-xs font-mono">
         <div className="flex items-center gap-2">
-          <Radio className="w-3.5 h-3.5 text-[var(--ox)] animate-pulse" />
-          <span className="font-bold uppercase">Broadcast Active:</span>
-          <span className="opacity-80">78.6k Reach across {campaigns.length} Active Campaigns &amp; Flash Drops</span>
+          <Store className="w-3.5 h-3.5 text-[var(--ox)]" />
+          <span className="font-bold uppercase">Marketplace Discovery:</span>
+          <span className="opacity-80">
+            {listings.length} Independent Creations · Zines, Type Foundries, Retainer Packages &amp; Graphic Kits
+          </span>
         </div>
         <div className="flex items-center gap-2 font-bold">
-          <span className="w-2 h-2 rounded-full bg-[var(--acid)] border border-[var(--line)]" />
-          <span>{activeCount} Live Channels Broadcasting</span>
+          <Sparkles className="w-3.5 h-3.5 text-[var(--ox)]" />
+          <span>Curated Studio Handoffs</span>
         </div>
       </div>
 
-      <HandoffNotice toDeptName="Manage" toDeptPath="/manage" text="Campaign milestones and deliverable timelines attach directly to client retainers in Manage." />
-
-      <IncomingAssetsTray />
-
-      {/* Active Campaign Distribution Grids */}
-      <div className="space-y-4 pt-4 border-t-2 border-[var(--line)]">
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <div className="flex items-center gap-2">
-            <Megaphone className="w-4 h-4 text-[var(--ox)]" />
-            <h2 className="font-display font-bold text-xl uppercase tracking-tight">Active Distribution Channels</h2>
-          </div>
-          <div className="flex items-center gap-3">
-            <span className="font-mono text-xs opacity-75">{campaigns.length} Campaigns Orchestrated</span>
-            <Button variant="secondary" size="sm" onClick={() => setNewModalOpen(true)}>
-              <Plus className="w-3.5 h-3.5 mr-1" />
-              <span>Schedule Drop</span>
-            </Button>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {campaigns.slice(0, 3).map((camp) => (
-            <Tile key={camp.id} accent={camp.status === 'live' ? 'none' : 'none'} shadow="default" className="p-6 space-y-4 flex flex-col justify-between">
-              <div className="space-y-2">
-                <div className="flex items-center justify-between gap-2">
-                  <span className="font-mono text-xs text-[var(--ox)] font-bold uppercase flex items-center gap-1.5">
-                    {camp.channel === 'substack' ? <Send className="w-3.5 h-3.5" /> : <Radio className="w-3.5 h-3.5" />}
-                    {camp.channel}
-                  </span>
-                  <Badge variant={camp.status === 'live' ? 'acid' : 'electric'} className="text-[10px] uppercase font-bold text-[#171717]">
-                    {camp.status}
-                  </Badge>
-                </div>
-                <h3 className="font-display font-bold text-xl leading-snug">{camp.title}</h3>
-                <p className="text-sm opacity-85 leading-relaxed">{camp.description}</p>
-                {camp.clientName && (
-                  <div className="font-mono text-[10px] opacity-75 text-[var(--ox)] font-bold">
-                    Client: {camp.clientName}
-                  </div>
-                )}
-              </div>
-              <div className="pt-3 border-t border-[var(--line)]/20 flex items-center justify-between">
-                <span className="font-mono text-xs opacity-70">{camp.reach} reach</span>
-                <Button variant="primary" size="sm" onClick={() => setAttachCampaign(camp)}>
-                  <Share2 className="w-3.5 h-3.5 mr-1" />
-                  <span>Attach to Client</span>
-                </Button>
-              </div>
-            </Tile>
-          ))}
-        </div>
-      </div>
-
-      {/* Release Cadence Schedule Matrix */}
-      <div className="space-y-4 pt-4 border-t-2 border-[var(--line)]">
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <div className="flex items-center gap-2">
-            <Calendar className="w-4 h-4 text-[var(--ox)]" />
-            <h2 className="font-display font-bold text-xl uppercase tracking-tight">14-Day Release Cadence</h2>
-          </div>
-          <span className="font-mono text-xs opacity-75">Click status badge to cycle stage</span>
-        </div>
-        <div className="border-2 border-[var(--line)] bg-[var(--card-bg)] shadow-hard overflow-x-auto">
-          <table className="w-full text-left font-mono text-xs border-collapse">
-            <thead>
-              <tr className="border-b-2 border-[var(--line)] bg-[var(--card-subtle)]">
-                <th className="p-3 uppercase">Timing</th>
-                <th className="p-3 uppercase">Channel</th>
-                <th className="p-3 uppercase">Campaign Title</th>
-                <th className="p-3 uppercase">Target Reach</th>
-                <th className="p-3 uppercase text-right">Status</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y border-[var(--line)]/20">
-              {campaigns.map((d) => (
-                <tr key={d.id} className="hover:bg-[var(--card-subtle)] transition-colors">
-                  <td className="p-3 font-bold">{d.dateNotice || 'Scheduled'}</td>
-                  <td className="p-3 capitalize">{d.channel}</td>
-                  <td className="p-3 font-sans font-bold text-sm">
-                    {d.title} {d.clientName && <span className="opacity-60 text-xs font-normal">({d.clientName})</span>}
-                  </td>
-                  <td className="p-3 opacity-80">{d.reach}</td>
-                  <td className="p-3 text-right">
-                    <button
-                      type="button"
-                      onClick={() => cycleStatus(d.id, d.status)}
-                      className={`px-2 py-0.5 border font-bold text-[10px] uppercase cursor-pointer hover:opacity-80 transition-opacity ${
-                        d.status === 'live'
-                          ? 'border-[#171717] bg-[var(--acid)] text-[#171717]'
-                          : d.status === 'planned'
-                          ? 'border-[var(--line)] bg-[var(--card-subtle)]'
-                          : 'border-[var(--line)] opacity-60'
-                      }`}
-                      title="Click to cycle status"
-                    >
-                      {d.status}
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      <NewCampaignModal
-        isOpen={newModalOpen}
-        onClose={() => setNewModalOpen(false)}
-        clients={clients}
-        onCreate={(data) => createCampaign(data)}
+      <HandoffNotice
+        toDeptName="Manage"
+        toDeptPath="/manage"
+        text="Campaign milestones and deliverable timelines attach directly to client retainers in Manage."
       />
 
-      {attachCampaign && (
-        <AttachToClientModal
-          campaign={attachCampaign}
-          clients={clients}
-          isOpen={!!attachCampaign}
-          onClose={() => setAttachCampaign(null)}
-          onAttach={(campId, cliId, cliName) => attachCampaignToClient(campId, cliId, cliName)}
-        />
+      {/* Search & Control Filter Bar */}
+      <div className="p-4 border-2 border-[var(--line)] bg-[var(--card-bg)] shadow-hard-sm space-y-3">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="relative w-full sm:w-80">
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search offerings, creators, fonts, zines…"
+              className="w-full pl-9 pr-4 py-2 border-2 border-[var(--line)] bg-[var(--bg)] font-mono text-xs text-[var(--ink)] placeholder:opacity-50 focus:outline-none focus:border-[var(--ox)]"
+            />
+            <Search className="w-4 h-4 opacity-50 absolute left-3 top-1/2 -translate-y-1/2" />
+          </div>
+
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setNewModalOpen(true)}
+              className="inline-flex items-center gap-1.5 px-4 py-2 border-2 border-[#171717] bg-[var(--ink)] text-[var(--bg)] font-display font-extrabold text-xs hover:bg-[var(--ox)] transition-colors shadow-hard-xs cursor-pointer"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              <span>+ Publish Offering</span>
+            </button>
+          </div>
+        </div>
+
+        {/* Category Filter Chips */}
+        <div className="flex flex-wrap items-center gap-2 pt-1">
+          <span className="font-mono text-xs uppercase font-bold opacity-70 mr-1 flex items-center gap-1">
+            <Filter className="w-3 h-3" /> Filter:
+          </span>
+          {CATEGORIES.map((cat) => {
+            const isSelected = selectedCategory === cat.id;
+            return (
+              <button
+                key={cat.id}
+                type="button"
+                onClick={() => setSelectedCategory(cat.id)}
+                className={`px-3 py-1 text-xs font-mono border-2 transition-colors cursor-pointer select-none ${
+                  isSelected
+                    ? 'border-[#171717] bg-[var(--ink)] text-[var(--bg)] font-bold shadow-hard-xs'
+                    : 'border-[var(--line)] bg-[var(--bg)] text-[var(--ink)] hover:bg-[var(--card-subtle)]'
+                }`}
+              >
+                {cat.label}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Offerings Grid */}
+      {filteredListings.length === 0 ? (
+        <div className="p-12 border-2 border-[var(--line)] bg-[var(--card-bg)] text-center font-mono text-sm space-y-3">
+          <p className="opacity-75">No creative offerings match your criteria.</p>
+          <button
+            type="button"
+            onClick={() => { setSelectedCategory('all'); setSearchQuery(''); }}
+            className="px-3 py-1 border-2 border-[var(--line)] bg-[var(--card-subtle)] text-xs font-bold font-mono"
+          >
+            Reset Filters
+          </button>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {filteredListings.map((listing, idx) => (
+            <ListingCard
+              key={listing.id}
+              listing={listing}
+              index={idx}
+              onInspect={(item) => setInspectedListing(item)}
+            />
+          ))}
+        </div>
       )}
+
+      {/* Inspect Offering Modal */}
+      <ListingDetailModal
+        listing={inspectedListing}
+        onClose={() => setInspectedListing(null)}
+      />
+
+      {/* Publish Offering Modal */}
+      <NewListingModal
+        isOpen={newModalOpen}
+        onClose={() => setNewModalOpen(false)}
+        onPublish={handlePublish}
+      />
     </div>
   );
 };

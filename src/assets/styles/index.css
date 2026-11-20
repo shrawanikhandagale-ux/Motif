@@ -8,6 +8,7 @@
   --color-oxblood: #702C35;
   --color-acid: #D9E638;
   --color-electric: #A8B8E8;
+  --color-teal: #477C75;
 
   /* Semantic Theme Mappings */
   --color-motif-bg: var(--bg);
@@ -40,6 +41,7 @@
   --color-oxblood: #702C35;
   --color-acid: #D9E638;
   --color-electric: #A8B8E8;
+  --color-teal: #477C75;
 
   /* Light Mode Semantics (Default) */
   --bg: #F1EBDD;
@@ -48,6 +50,7 @@
   --ox: #702C35;
   --acid: #D9E638;
   --elec: #A8B8E8;
+  --teal: #477C75;
   --card-bg: #FAF7EE;
   --card-subtle: #E8E1CE;
 
@@ -334,6 +337,184 @@ body {
 
 .shadow-hard-acid {
   box-shadow: var(--shadow-hard-acid);
+}
+
+/* =========================================================================
+   SKILL MAP CONSTELLATION & MOTION SYSTEM (motif-v2.html fidelity)
+   ========================================================================= */
+
+/* SVG text styling with high-contrast halo */
+.skill-map-svg text {
+  font-family: var(--font-mono), monospace;
+  font-size: 10px;
+  fill: var(--ink);
+  paint-order: stroke;
+  stroke: var(--bg);
+  stroke-width: 3px;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* Connecting edges */
+.ed {
+  fill: none;
+  stroke: var(--line);
+}
+
+.ed.lt {
+  stroke-width: 3.5;
+  stroke-dasharray: 600;
+  stroke-dashoffset: 600;
+  animation: skillEdgeDraw 1.1s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+}
+
+.ed.dm {
+  stroke-width: 1.5;
+  stroke-dasharray: 4 5;
+  opacity: 0;
+  animation: skillEdgeFadeIn 0.6s 0.3s forwards;
+}
+
+@keyframes skillEdgeDraw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes skillEdgeFadeIn {
+  to {
+    opacity: 0.45;
+  }
+}
+
+/* Skill nodes */
+.node-g {
+  cursor: pointer;
+  animation: nodePopIn 0.5s var(--delay, 0s) backwards;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+.node-g circle.main-circle {
+  fill: var(--bg);
+  stroke: var(--line);
+  stroke-width: 2.5;
+  transform-box: fill-box;
+  transform-origin: center;
+  transition: stroke-width 0.2s ease, filter 0.2s ease, stroke 0.2s ease;
+}
+
+/* Node States: on (unlocked), nx (up-next), lk (locked), fl (flash burst), pr (proven red ring) */
+.node-g.on circle.main-circle {
+  fill: var(--acid);
+  stroke: #171717;
+}
+
+.node-g.nx circle.main-circle {
+  stroke-dasharray: 4 3;
+  animation: pulseNext 1.4s infinite ease-in-out;
+  stroke: var(--ox);
+}
+
+.node-g.lk {
+  opacity: 0.38;
+}
+
+.node-g.fl circle.main-circle {
+  animation: nodeBurst 1s ease-out;
+}
+
+.node-g:hover circle.main-circle {
+  stroke-width: 4.5;
+  filter: drop-shadow(0 0 8px rgba(217, 230, 56, 0.7));
+}
+
+.node-g.selected circle.main-circle {
+  stroke-width: 4.5;
+  stroke: var(--ox);
+}
+
+.node-g .pr-ring {
+  fill: none;
+  stroke: var(--ox);
+  stroke-width: 3.5;
+  pointer-events: none;
+}
+
+@keyframes nodePopIn {
+  from {
+    transform: scale(0);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes pulseNext {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.26);
+  }
+}
+
+@keyframes nodeBurst {
+  0% {
+    transform: scale(1);
+  }
+  30% {
+    transform: scale(2.1);
+    fill: #ffffff;
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* Tactile brutalist switch toggle (motif-v2.html:43) */
+.sw-toggle {
+  all: unset;
+  cursor: pointer;
+  width: 46px;
+  height: 24px;
+  border: 2px solid var(--line);
+  background: var(--bg);
+  position: relative;
+  display: inline-block;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.sw-toggle::after {
+  content: "";
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 16px;
+  height: 16px;
+  background: var(--line);
+  transition: left 0.15s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.sw-toggle.on {
+  background: var(--acid);
+}
+
+.sw-toggle.on::after {
+  left: 24px;
+  background: #171717;
+}
+
+/* Editorial card micro-tilt */
+.card-tilt-hover {
+  transition: transform 0.16s ease, box-shadow 0.16s ease;
+}
+
+.card-tilt-hover:hover {
+  transform: translate(-3px, -3px) rotate(-0.6deg);
+  box-shadow: 6px 6px 0px var(--ox);
 }
 
 @media (prefers-reduced-motion: reduce) {

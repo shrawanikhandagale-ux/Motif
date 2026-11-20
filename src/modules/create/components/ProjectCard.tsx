@@ -1,47 +1,63 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight, Clock, FileText } from 'lucide-react';
-import { Tile, Badge, Button, ProgressBar } from '../../../components/ui';
 import { ProjectRecord } from '../../../types';
 import { useProgress } from '../../../hooks';
 
 interface ProjectCardProps {
   project: ProjectRecord;
+  index?: number;
 }
 
-export const ProjectCard: React.FC<ProjectCardProps> = ({ project }) => {
+export const ProjectCard: React.FC<ProjectCardProps> = ({ project, index }) => {
   const { completedChecklistIds } = useProgress();
 
-  const getStatusBadgeVariant = (status: ProjectRecord['status']) => {
-    switch (status) {
-      case 'completed':
-        return 'acid';
-      case 'review':
-        return 'electric';
-      case 'in_progress':
-        return 'oxblood';
-      default:
-        return 'default';
-    }
-  };
-
-  // Approximate brief completion if connected
   const hasBrief = Boolean(project.briefId);
   const isCompleted = project.status === 'completed';
+  const trackNum = index !== undefined ? `0${index + 1}`.slice(-2) : undefined;
+
+  const statusLabel = project.status.replace('_', ' ');
 
   return (
-    <Tile accent="none" shadow="default" className="p-6 flex flex-col justify-between space-y-5">
-      <div className="space-y-4">
+    <div className="border-2 border-[var(--line)] bg-[var(--card-bg)] p-5 flex flex-col justify-between shadow-hard-sm hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-hard-md transition-all group">
+      <div>
+        {/* Cover banner if index is present */}
+        {trackNum && (
+          <div
+            className="h-24 -m-5 mb-4 border-b-2 border-[var(--line)] p-3 flex items-end justify-between overflow-hidden relative select-none"
+            style={{
+              backgroundColor: '#702C35',
+              backgroundImage: 'radial-gradient(circle, rgba(241,235,221,0.25) 30%, transparent 32%)',
+              backgroundSize: '12px 12px',
+            }}
+          >
+            <span className="font-display font-black text-5xl text-[#F1EBDD] tracking-tighter leading-none select-none">
+              {trackNum}
+            </span>
+            <span className="font-mono text-[10px] font-bold uppercase px-2 py-0.5 border border-[#171717] bg-[#FAF7EE] text-[#171717] shadow-hard-xs">
+              {project.clientName || 'Studio Project'}
+            </span>
+          </div>
+        )}
+
         {/* Header row */}
-        <div className="flex flex-wrap items-center justify-between gap-2">
+        <div className="flex flex-wrap items-center justify-between gap-2 pb-2 mb-2 border-b border-[var(--line)]/20">
           <div className="flex items-center gap-1.5 flex-wrap">
-            <Badge variant={getStatusBadgeVariant(project.status)} className="capitalize font-mono text-xs">
-              {project.status.replace('_', ' ')}
-            </Badge>
+            <span
+              className={`font-mono text-[10px] uppercase font-bold px-2 py-0.5 border ${
+                isCompleted
+                  ? 'border-[#171717] bg-[var(--acid)] text-[#171717]'
+                  : project.status === 'review'
+                  ? 'border-[#171717] bg-[var(--elec)] text-[#171717]'
+                  : 'border-[var(--line)] bg-[var(--card-subtle)] text-[var(--ink)]'
+              }`}
+            >
+              {statusLabel}
+            </span>
             {hasBrief && (
-              <Badge variant="default" className="font-mono text-[10px] uppercase">
-                <FileText className="w-3 h-3 mr-1" /> Brief Attached
-              </Badge>
+              <span className="font-mono text-[10px] uppercase px-1.5 py-0.5 border border-[var(--line)] bg-[var(--bg)] opacity-80 inline-flex items-center gap-1">
+                <FileText className="w-3 h-3 text-[var(--ox)]" /> Brief Attached
+              </span>
             )}
           </div>
           <span className="font-mono text-xs opacity-75 inline-flex items-center gap-1">
@@ -51,55 +67,68 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({ project }) => {
 
         {/* Title & Client */}
         <div>
-          {project.clientName && (
-            <span className="font-mono text-xs text-[var(--ox)] uppercase font-bold tracking-wider">
+          {project.clientName && !trackNum && (
+            <span className="font-mono text-xs text-[var(--ox)] uppercase font-bold tracking-wider block">
               {project.clientName}
             </span>
           )}
-          <h3 className="font-display font-extrabold text-2xl text-[var(--ink)] leading-snug mt-0.5">
-            {project.title}
+          <h3 className="font-display font-extrabold text-xl text-[var(--ink)] leading-snug group-hover:text-[var(--ox)] transition-colors">
+            <Link to={`/create/projects/${project.id}`}>
+              {project.title}
+            </Link>
           </h3>
-          <p className="font-sans text-sm opacity-85 mt-2 leading-relaxed">
+          <p className="font-sans text-xs opacity-85 mt-2 leading-relaxed line-clamp-3">
             {project.summary}
           </p>
         </div>
 
         {/* Tags */}
-        <div className="flex flex-wrap gap-1.5 pt-1">
+        <div className="flex flex-wrap gap-1.5 pt-3">
           {project.tags.map((t) => (
-            <Badge key={t} variant="electric" className="text-[10px] font-mono">
+            <span
+              key={t}
+              className="font-mono text-[10px] px-1.5 py-0.5 border border-[var(--line)] bg-[var(--bg)] text-[var(--ink)]"
+            >
               {t}
-            </Badge>
+            </span>
           ))}
         </div>
 
-        {/* Brief checklist hint if connected */}
+        {/* Deliverable checklist hint */}
         {hasBrief && (
-          <div className="p-3 border-2 border-[var(--line)] bg-[var(--card-subtle)] space-y-1.5">
-            <div className="flex items-center justify-between font-mono text-xs">
+          <div className="p-2.5 border border-[var(--line)] bg-[var(--card-subtle)] space-y-1.5 mt-3">
+            <div className="flex items-center justify-between font-mono text-[11px]">
               <span className="font-bold opacity-80">Deliverable Checklist</span>
-              <span className="opacity-75">{isCompleted ? '100% Complete' : 'In Progress'}</span>
+              <span className="opacity-75">{isCompleted ? '100% Shipped' : 'Milestones in Progress'}</span>
             </div>
-            <ProgressBar
-              value={isCompleted ? 100 : completedChecklistIds.length > 0 ? 50 : 25}
-              variant={isCompleted ? 'acid' : 'oxblood'}
-              size="sm"
-            />
+            <div
+              className="h-2 border border-[var(--line)] bg-[var(--card-bg)] overflow-hidden"
+              role="progressbar"
+              aria-valuenow={isCompleted ? 100 : completedChecklistIds.length > 0 ? 60 : 30}
+              aria-valuemin={0}
+              aria-valuemax={100}
+            >
+              <div
+                className="h-full bg-[var(--ox)] transition-all duration-300"
+                style={{ width: `${isCompleted ? 100 : completedChecklistIds.length > 0 ? 60 : 30}%` }}
+              />
+            </div>
           </div>
         )}
       </div>
 
       {/* Footer */}
-      <div className="pt-4 border-t border-[var(--line)]/20 flex items-center justify-between">
-        <span className="font-mono text-xs opacity-75">{project.id}</span>
-        <Link to={`/create/projects/${project.id}`}>
-          <Button variant="primary" size="sm">
-            <span>Open Studio</span>
-            <ArrowRight className="w-4 h-4 ml-1.5" />
-          </Button>
+      <div className="pt-4 mt-4 border-t-2 border-[var(--line)] flex items-center justify-between">
+        <span className="font-mono text-xs opacity-60">{project.id}</span>
+        <Link
+          to={`/create/projects/${project.id}`}
+          className="inline-flex items-center gap-1.5 px-3.5 py-1.5 border-2 border-[var(--line)] bg-[var(--ink)] text-[var(--bg)] font-display font-bold text-xs hover:bg-[var(--ox)] transition-colors shadow-hard-xs cursor-pointer"
+        >
+          <span>Open Studio</span>
+          <ArrowRight className="w-3.5 h-3.5" />
         </Link>
       </div>
-    </Tile>
+    </div>
   );
 };
 

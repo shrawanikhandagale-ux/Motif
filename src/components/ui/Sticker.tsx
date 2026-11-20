@@ -3,7 +3,7 @@ import React from 'react';
 export interface StickerProps extends React.HTMLAttributes<HTMLDivElement> {
   children: React.ReactNode;
   rotation?: 'cw' | 'ccw' | 'flat';
-  variant?: 'acid' | 'oxblood' | 'electric' | 'ivory';
+  variant?: 'acid' | 'oxblood' | 'electric' | 'ivory' | 'teal';
   interactive?: boolean;
 }
 
@@ -27,6 +27,7 @@ export const Sticker: React.FC<StickerProps> = ({
     oxblood: 'bg-[var(--ox)] text-[#F1EBDD] border-2 border-[var(--line)] shadow-[5px_5px_0_var(--line)]',
     electric: 'bg-[var(--elec)] text-[#171717] border-2 border-[#171717] shadow-[5px_5px_0_#171717]',
     ivory: 'bg-[var(--bg)] text-[var(--ink)] border-2 border-[var(--line)] shadow-[5px_5px_0_var(--line)]',
+    teal: 'bg-[#477C75] text-[#F1EBDD] border-2 border-[var(--line)] shadow-[5px_5px_0_var(--line)]',
   };
 
   const interactiveStyles = interactive

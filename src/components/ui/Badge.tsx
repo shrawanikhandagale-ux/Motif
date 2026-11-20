@@ -2,7 +2,7 @@ import React from 'react';
 
 export interface BadgeProps {
   children: React.ReactNode;
-  variant?: 'default' | 'acid' | 'oxblood' | 'electric' | 'subtle';
+  variant?: 'default' | 'acid' | 'oxblood' | 'electric' | 'subtle' | 'teal';
   className?: string;
 }
 
@@ -17,6 +17,7 @@ export const Badge: React.FC<BadgeProps> = ({
     oxblood: 'bg-[var(--ox)] text-[#F1EBDD] border-[var(--line)]',
     electric: 'bg-[var(--elec)] text-[#171717] border-[#171717]',
     subtle: 'bg-transparent text-[var(--ink)] border-[var(--line)] opacity-80',
+    teal: 'bg-[#477C75] text-[#F1EBDD] border-[var(--line)]',
   };
 
   return (
