@@ -41,7 +41,7 @@ import { DevComponentsPage } from './DevComponentsPage';
 
 export const routes: RouteObject[] = [
   {
-    path: '/',
+    path: '/landing',
     element: <LandingPage />,
   },
   {
@@ -51,6 +51,10 @@ export const routes: RouteObject[] = [
   {
     element: <AppShell />,
     children: [
+      {
+        index: true,
+        element: <HomePage />,
+      },
       {
         path: 'home',
         element: <HomePage />,
